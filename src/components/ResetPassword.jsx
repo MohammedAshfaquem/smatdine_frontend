@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export default function ResetPassword() {
   const { userId, token } = useParams();
@@ -7,23 +8,21 @@ export default function ResetPassword() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage("");
 
     // Validation
     if (password !== confirmPassword) {
-      setMessage("❌ Passwords do not match!");
+      toast.error("❌ Passwords do not match!");
       setLoading(false);
       return;
     }
 
     if (password.length < 6) {
-      setMessage("⚠️ Password must be at least 6 characters!");
+      toast.warning("⚠️ Password must be at least 6 characters!");
       setLoading(false);
       return;
     }
@@ -41,14 +40,14 @@ export default function ResetPassword() {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage("✅ Password reset successful! Redirecting to login...");
+        toast.success("Password reset successful! Redirecting to login...");
         setTimeout(() => navigate("/login"), 2000);
       } else {
-        setMessage(data.error || "❌ Something went wrong!");
+        toast.error(data.error || "❌ Something went wrong!");
       }
     } catch (err) {
       console.error(err);
-      setMessage("⚠️ Network error. Please try again!");
+      toast.error("⚠️ Network error. Please try again!");
     } finally {
       setLoading(false);
     }
@@ -156,20 +155,7 @@ export default function ResetPassword() {
               />
             </div>
 
-            {/* Message */}
-            {message && (
-              <div
-                className={`mb-4 p-3 rounded-lg text-sm ${
-                  message.includes("✅")
-                    ? "bg-green-50 border border-green-200 text-green-600"
-                    : "bg-red-50 border border-red-200 text-red-600"
-                }`}
-              >
-                {message}
-              </div>
-            )}
-
-            {/* Button */}
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
