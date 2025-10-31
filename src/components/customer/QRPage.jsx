@@ -2,11 +2,10 @@ import { useNavigate } from "react-router-dom";
 
 export default function QRPage() {
   const qrUrl = "http://localhost:8000/media/qrcodes/qrcodes/table_5_qr.png";
-  const tableNumber = 5; // You can make this dynamic later
+  const tableNumber = 5; 
   const navigate = useNavigate();
 
   const handleScan = () => {
-    // Navigate to customer dashboard and pass tableNumber as a query parameter
     navigate(`/customer/dashboard?table=${tableNumber}`);
   };
 

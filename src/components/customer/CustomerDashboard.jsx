@@ -5,12 +5,10 @@ export default function CustomerDashboard() {
   const [searchParams] = useSearchParams();
   const [tableDetails, setTableDetails] = useState(null);
 
-  // ✅ Get ?table=10 from URL
   const tableNumber = searchParams.get("table");
 
   useEffect(() => {
     if (tableNumber) {
-      // ✅ Use tableNumber (not tableId)
       fetch(`http://localhost:8000/tables/${tableNumber}/`)
         .then((res) => res.json())
         .then((data) => setTableDetails(data))
