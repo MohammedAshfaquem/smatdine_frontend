@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect } from "react";
+const API_URL = import.meta.env.VITE_API_URL
 
 export const PendingCountContext = createContext();
 
@@ -12,7 +13,7 @@ export const PendingCountProvider = ({ children }) => {
 
     const fetchPendingCount = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/admin/pending-count/", {
+        const res = await fetch(`${API_URL}/api/admin/pending-count/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {

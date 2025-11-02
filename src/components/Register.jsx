@@ -5,10 +5,11 @@ import { toast } from "react-toastify";
 
 export default function CreateAccount() {
   const navigate = useNavigate();
-  const [fullName, setFullName] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -26,22 +27,36 @@ export default function CreateAccount() {
       return;
     }
 
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
     setLoading(true);
     try {
+      // ✅ Exact keys as backend expects
       await registerStaff({
-        name: fullName,
+        name,
         email,
         password,
+        confirm_password: confirmPassword,
         role,
       });
 
       toast.success("Account created successfully! Please verify your email 🎉");
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
-      const errorMessages = err.response?.data
-        ? Object.values(err.response.data).flat().join(" ")
-        : "Error registering. Please try again.";
-      toast.error(errorMessages);
+      if (err.response?.data) {
+        const errors = err.response.data;
+        for (const [field, messages] of Object.entries(errors)) {
+          const msg = Array.isArray(messages) ? messages.join(" ") : messages;
+          toast.error(
+            `${field.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}: ${msg}`
+          );
+        }
+      } else {
+        toast.error("Error registering. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -52,15 +67,13 @@ export default function CreateAccount() {
   return (
     <div className="min-h-screen lg:h-screen bg-[#F9FAFB] flex items-center justify-center p-6 md:p-8 overflow-hidden">
       <div className="flex flex-col md:flex-row bg-white rounded-2xl shadow-2xl overflow-hidden max-w-5xl w-full h-auto md:h-[90vh]">
-        {/* Left Section (hidden on mobile) */}
+        {/* Left Section */}
         <div className="hidden md:flex w-2/5 bg-gradient-to-br from-[#059669] to-[#047857] p-12 flex-col justify-center text-white">
           <div className="max-w-sm">
             <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center mb-4 shadow-md">
               <span className="text-2xl font-bold text-[#065F46]">SD</span>
             </div>
-
             <h2 className="text-3xl font-bold mb-3 text-[#FACC15]">SmartDine</h2>
-
             <p className="text-[#D1FAE5] leading-relaxed text-base">
               Join SmartDine and collaborate with your restaurant team.
             </p>
@@ -71,14 +84,12 @@ export default function CreateAccount() {
         <div className="w-full md:w-3/5 p-8 md:p-12 flex items-center justify-center">
           <div className="max-w-md w-full">
             <div className="mb-8 text-center">
-              <h1 className="text-3xl font-bold text-[#1F2937] mb-2">
-                Create Account
-              </h1>
+              <h1 className="text-3xl font-bold text-[#1F2937] mb-2">Create Account</h1>
               <p className="text-gray-600">Sign up to get started.</p>
             </div>
 
             <form onSubmit={handleSubmit}>
-              {/* Full Name */}
+              {/* Name */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-[#1F2937] mb-2">
                   Full Name
@@ -86,8 +97,8 @@ export default function CreateAccount() {
                 <input
                   type="text"
                   placeholder="John Doe"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   required
                   className="w-full pl-3 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#059669] outline-none"
                 />
@@ -126,7 +137,7 @@ export default function CreateAccount() {
               </div>
 
               {/* Password */}
-              <div className="mb-6">
+              <div className="mb-4">
                 <label className="block text-sm font-medium text-[#1F2937] mb-2">
                   Password
                 </label>
@@ -149,6 +160,21 @@ export default function CreateAccount() {
                 </div>
               </div>
 
+              {/* Confirm Password */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-[#1F2937] mb-2">
+                  Confirm Password
+                </label>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Re-enter password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  className="w-full pl-3 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#059669] outline-none"
+                />
+              </div>
+
               {/* Terms */}
               <div className="mb-6">
                 <label className="flex items-start text-sm text-[#1F2937]">
@@ -160,24 +186,18 @@ export default function CreateAccount() {
                   />
                   <span className="ml-2">
                     I agree to the{" "}
-                    <button
-                      type="button"
-                      className="text-[#059669] hover:text-[#047857]"
-                    >
+                    <button type="button" className="text-[#059669] hover:text-[#047857]">
                       Terms of Service
                     </button>{" "}
                     and{" "}
-                    <button
-                      type="button"
-                      className="text-[#059669] hover:text-[#047857]"
-                    >
+                    <button type="button" className="text-[#059669] hover:text-[#047857]">
                       Privacy Policy
                     </button>
                   </span>
                 </label>
               </div>
 
-              {/* Submit Button */}
+              {/* Submit */}
               <button
                 type="submit"
                 disabled={loading}

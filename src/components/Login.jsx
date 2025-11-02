@@ -12,45 +12,58 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+const handleLogin = async (e) => {
+  e.preventDefault();
+  setLoading(true);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  try {
+    const res = await loginStaff({ email, password });
+    const { user, access, refresh } = res.data;
 
-    try {
-      const res = await loginStaff({ email, password });
-      const { user, access, refresh } = res.data;
+    login({ role: user.role, access, refresh });
+    if (rememberMe) localStorage.setItem("refresh", refresh);
 
-      login({ role: user.role, access, refresh });
-      if (rememberMe) localStorage.setItem("refresh", refresh);
+    toast.success("Login successful 🎉");
 
-      toast.success("Login successful 🎉");
+    setTimeout(() => {
+      if (user.role === "admin") navigate("/admin-dashboard");
+      else if (user.role === "kitchen") navigate("/kitchen-dashboard");
+      else if (user.role === "waiter") navigate("/waiter-dashboard");
+      else navigate("/");
+    }, 1200);
+  } catch (err) {
+    console.error("Login Error:", err.response?.data || err);
 
-      setTimeout(() => {
-        if (user.role === "admin") navigate("/admin-dashboard");
-        else if (user.role === "kitchen") navigate("/kitchen-dashboard");
-        else if (user.role === "waiter") navigate("/waiter-dashboard");
-        else navigate("/");
-      }, 1200);
-    } catch (err) {
-      console.error(err);
-      const errorMessage =
-        err.response?.data?.non_field_errors?.[0] ||
-        err.response?.data?.detail ||
-        err.response?.data?.message ||
-        "Login failed. Check your email or password.";
+    const error = err.response?.data;
 
-      if (errorMessage.toLowerCase().includes("verify")) {
+    // ✅ Show specific messages returned by backend
+    if (error?.error) {
+      const msg = error.error;
+
+      if (msg.includes("not verified")) {
         toast.info("Please verify your email before logging in.");
-      } else if (errorMessage.toLowerCase().includes("inactive")) {
+      } else if (msg.includes("not approved")) {
         toast.warning("Your account is not yet approved by admin.");
+      } else if (msg.includes("blocked")) {
+        toast.error("Your account has been blocked. Contact support.");
       } else {
-        toast.error(errorMessage);
+        toast.error(msg);
       }
-    } finally {
-      setLoading(false);
+
+    // ✅ If backend didn’t send "error" key (fallbacks)
+    } else if (error?.detail) {
+      toast.error(error.detail);
+    } else if (error?.non_field_errors?.length) {
+      toast.error(error.non_field_errors[0]);
+    } else {
+      toast.error("Login failed. Check your email or password.");
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center p-6">
@@ -159,7 +172,7 @@ export default function Login() {
                 </label>
                 <button
                   type="button"
-                  onClick={() => navigate("/request-password-reset")}
+                  onClick={() => navigate("/forget-password")}
                   className="text-sm text-[#059669] hover:text-[#047857] font-medium"
                 >
                   Forgot password?

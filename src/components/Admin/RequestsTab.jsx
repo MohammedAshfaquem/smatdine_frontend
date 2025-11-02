@@ -4,18 +4,22 @@ import { AuthContext } from "../../context/AuthContext";
 import { PendingCountContext } from "../../context/PendingCountContext";
 import ConfirmationModal from "../ConfirmationModal.jsx";
 
+const API_URL = import.meta.env.VITE_API_URL
+
 export default function RequestsTab() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedRequest, setSelectedRequest] = useState(null); // for modal
+  const [selectedRequest, setSelectedRequest] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
   const navigate = useNavigate();
   const { user, logout } = useContext(AuthContext);
   const { setPendingCount } = useContext(PendingCountContext);
 
+  // ✅ Fetch pending requests on load
   useEffect(() => {
-    const token = sessionStorage.getItem("access") || localStorage.getItem("access");
+    const token =
+      sessionStorage.getItem("access") || localStorage.getItem("access");
     if (token) {
       fetchPendingRequests(token);
     } else {
@@ -23,10 +27,11 @@ export default function RequestsTab() {
     }
   }, []);
 
+  // ✅ Fetch pending users
   const fetchPendingRequests = async (token) => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:8000/test/pending-users/", {
+      const res = await fetch(`${API_URL}/test/pending-users/`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -54,15 +59,17 @@ export default function RequestsTab() {
     }
   };
 
+  // ✅ Approve user
   const approveUser = async (id) => {
-    const token = sessionStorage.getItem("access") || localStorage.getItem("access");
+    const token =
+      sessionStorage.getItem("access") || localStorage.getItem("access");
     if (!token) {
       navigate("/login");
       return;
     }
 
     try {
-      const res = await fetch(`http://localhost:8000/api/admin/approve-user/${id}/`, {
+      const res = await fetch(`${API_URL}/api/admin/approve-user/${id}/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -71,9 +78,7 @@ export default function RequestsTab() {
       });
 
       if (res.ok) {
-        const data = await res.json();
-        
-        fetchPendingRequests(token);
+        await fetchPendingRequests(token);
       } else if (res.status === 403) {
         alert("❌ You are not authorized to approve users.");
       } else {
@@ -103,7 +108,8 @@ export default function RequestsTab() {
             Pending Requests
           </h1>
           <p className="text-gray-600">
-            Welcome back, <span className="font-medium">{user?.name || "Admin User"}</span>
+            Welcome back,{" "}
+            <span className="font-medium">{user?.name || "Admin User"}</span>
           </p>
         </div>
       </div>
@@ -164,13 +170,22 @@ export default function RequestsTab() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {requests.map((req, index) => (
-                  <tr key={req.id} className="hover:bg-gray-50 transition-colors">
+                  <tr
+                    key={req.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
                     <td className="px-6 py-4 text-sm text-gray-900">
                       REQ-{String(index + 1).padStart(3, "0")}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{req.name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{req.email}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{req.role}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {req.name}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {req.email}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {req.role}
+                    </td>
                     <td className="px-6 py-4">
                       <button
                         onClick={() => handleApproveClick(req)}
@@ -187,6 +202,7 @@ export default function RequestsTab() {
         )}
       </div>
 
+      {/* ✅ Confirmation modal */}
       <ConfirmationModal
         isOpen={showModal}
         title="Approve User?"

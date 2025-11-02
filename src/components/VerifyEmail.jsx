@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 
+const API_URL = import.meta.env.VITE_API_URL
+
 export default function VerifyEmail() {
   const { token } = useParams();
   const navigate = useNavigate();
@@ -11,7 +13,7 @@ export default function VerifyEmail() {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:8000/auth/staff/verify-email/${token}/`)
+      .get(`${API_URL}/auth/staff/verify-email/${token}/`)
       .then((res) => {
         setMessage(res.data.message || "Email verified successfully!");
         setStatus("success");

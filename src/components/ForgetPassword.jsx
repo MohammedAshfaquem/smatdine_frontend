@@ -2,7 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-export default function RequestPasswordReset() {
+const API_URL = import.meta.env.VITE_API_URL // from .env file
+
+
+export default function ForgetPassword() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -12,7 +15,7 @@ export default function RequestPasswordReset() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8000/auth/staff/request-password-reset/", {
+      const res = await fetch(`${API_URL}/auth/staff/forget-password/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
