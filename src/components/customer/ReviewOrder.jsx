@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import { ArrowLeft, MapPin, Check, Lightbulb } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
@@ -49,61 +50,177 @@ export default function ReviewOrder() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-6 flex flex-col items-center">
-      <div className="bg-white shadow-md rounded-2xl w-full max-w-3xl p-6">
-        <h2 className="text-2xl font-bold text-emerald-600 mb-6 text-center">
-          Review Your Order
-        </h2>
+  // Calculate subtotal and tax
+  const subtotal = total;
+  const tax = subtotal * 0.08;
+  const totalAmount = subtotal + tax;
 
-        {cartItems.length === 0 ? (
-          <p className="text-gray-500 text-center">No items in your cart.</p>
-        ) : (
-          <>
-            <ul className="divide-y divide-gray-200 mb-6">
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-5">
+        <div className="max-w-5xl mx-auto flex items-center gap-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-all duration-300"
+          >
+            <ArrowLeft size={20} className="text-gray-700" />
+          </button>
+          <div>
+            <h1 className="text-lg font-normal text-emerald-800">
+              Review Your Order
+            </h1>
+            <p className="text-gray-500 text-sm mt-1">
+              Confirm details before placing order
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-6 py-8 space-y-6">
+        {/* Delivery Location */}
+        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-200">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <MapPin size={28} className="text-white" />
+            </div>
+            <div>
+              <p className="text-gray-600 text-sm font-medium">
+                Delivery Location
+              </p>
+              <p className="text-emerald-800 text-lg font-bold">
+                Table {tableId || "TABLE-12"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Order Summary */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+          <h2 className="text-xl font-normal text-emerald-800 mb-6">
+            Order Summary
+          </h2>
+
+          {cartItems.length === 0 ? (
+            <p className="text-gray-500 text-center py-8">
+              No items in your cart.
+            </p>
+          ) : (
+            <div className="space-y-4">
               {cartItems.map((item) => (
-                <li key={item.id} className="flex justify-between py-3">
-                  <div>
-                    <p className="font-medium text-gray-900">
+                <div
+                  key={item.id}
+                  className="flex items-center gap-4 pb-4 border-b border-gray-100 last:border-0"
+                >
+                  {/* Item Image */}
+                  {item.menu_item?.image && (
+                    <img
+                      src={
+                        item.menu_item?.image?.startsWith("http")
+                          ? item.menu_item.image
+                          : `${API_URL}${item.menu_item.image}`
+                      }
+                      alt={item.menu_item?.name}
+                      className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
+                    />
+                  )}
+
+                  {/* Item Details */}
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-emerald-800 text-base mb-1">
                       {item.menu_item?.name}
+                    </h3>
+                    
+                     {item.menu_item?.spice_level !== undefined && (
+                        <div className="flex items-center gap-1 mb-3">
+                          <span className="text-xs text-gray-600">
+                            {item.menu_item.spice_level === 0
+                              ? "No Spicy"
+                              : `Spice Level: ${item.menu_item.spice_level}/3`}
+                          </span>
+                        </div>
+                      )}
+
+                  </div>
+
+                  {/* Price & Quantity */}
+                  <div className="text-right">
+                    <p className="text-lg font-bold text-emerald-600">
+                      ₹{parseFloat(item.subtotal || 0).toFixed(2)}
                     </p>
                     <p className="text-sm text-gray-600">
-                      Qty: {item.quantity} × ₹
-                      {parseFloat(item.menu_item?.price || 0).toFixed(2)}
+                      Qty: {item.quantity}
                     </p>
                   </div>
-                  <span className="font-semibold text-emerald-600">
-                    ₹{item.subtotal}
-                  </span>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
+          )}
+        </div>
 
-            <div className="flex justify-between items-center mb-6">
-              <span className="font-semibold text-gray-700 text-lg">
-                Total:
+        {/* Price Details */}
+        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-200">
+          <h2 className="text-xl font-medium text-emerald-800 mb-6">
+            Price Details
+          </h2>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-700 font-medium">
+                Subtotal ({cartItems.length}{" "}
+                {cartItems.length === 1 ? "item" : "items"})
               </span>
-              <span className="text-xl font-bold text-emerald-600">
-                ₹{total.toFixed(2)}
+              <span className="text-gray-900 font-normal">
+                ₹{subtotal.toFixed(2)}
               </span>
             </div>
 
-            <div className="flex justify-between gap-4">
-              <button
-                onClick={() => navigate(-1)}
-                className="w-1/3 py-3 bg-gray-200 hover:bg-gray-300 rounded-xl font-semibold text-gray-700 transition"
-              >
-                Back to Cart
-              </button>
-              <button
-                onClick={handlePlaceOrder}
-                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold transition"
-              >
-                Confirm & Place Order
-              </button>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-700 font-normal">
+                Tax & Service Charges (8%)
+              </span>
+              <span className="text-gray-900 font-normal">
+                ₹{tax.toFixed(2)}
+              </span>
             </div>
-          </>
-        )}
+
+            <div className="flex items-center justify-between pt-4 border-t-2 border-emerald-300">
+              <span className="text-lg font-bold text-emerald-900">
+                Total Amount
+              </span>
+              <span className="text-2xl font-bold text-emerald-600">
+                ₹{totalAmount.toFixed(2)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="px-6 py-4 bg-white border-2 border-emerald-600 text-emerald-700 font-semibold rounded-xl hover:bg-emerald-50 transition-all duration-300 text-base"
+          >
+            Back to Cart
+          </button>
+          <button
+            onClick={handlePlaceOrder}
+            disabled={cartItems.length === 0}
+            className="flex items-center justify-center gap-2 px-6 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-base"
+          >
+            <Check size={20} />
+            <span>Confirm & Place Order</span>
+          </button>
+        </div>
+
+        {/* Info Banner */}
+        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 flex items-start gap-3">
+          <Lightbulb size={24} className="text-blue-600 flex-shrink-0 mt-0.5" />
+          <p className="text-blue-900 text-sm leading-relaxed">
+            Your order will be sent directly to the kitchen. You can track the
+            preparation status in real-time.
+          </p>
+        </div>
       </div>
     </div>
   );

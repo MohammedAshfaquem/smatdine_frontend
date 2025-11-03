@@ -4,19 +4,19 @@ import { useNavigate } from "react-router-dom";
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); 
+  const [user, setUser] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
   const [refreshToken, setRefreshToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedRole = localStorage.getItem("role");
+    const storedUser = localStorage.getItem("user");
     const storedRefresh = localStorage.getItem("refresh");
     const storedAccess = sessionStorage.getItem("access");
 
-    if (storedRole && storedRefresh) {
-      setUser({ role: storedRole });
+    if (storedUser && storedRefresh) {
+      setUser(JSON.parse(storedUser)); // ✅ restore full user object
       setRefreshToken(storedRefresh);
       setAccessToken(storedAccess);
     }
@@ -24,23 +24,24 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = ({ role, access, refresh }) => {
-    localStorage.setItem("role", role);
+  const login = ({ user, access, refresh }) => {
+    // ✅ store full user info
+    localStorage.setItem("user", JSON.stringify(user));
     localStorage.setItem("refresh", refresh);
     sessionStorage.setItem("access", access);
 
-    setUser({ role });
+    setUser(user);
     setAccessToken(access);
     setRefreshToken(refresh);
 
-    if (role === "admin") navigate("/admin-dashboard");
-    else if (role === "kitchen") navigate("/kitchen-dashboard");
-    else if (role === "waiter") navigate("/waiter-dashboard");
+    if (user.role === "admin") navigate("/admin-dashboard");
+    else if (user.role === "kitchen") navigate("/kitchen-dashboard");
+    else if (user.role === "waiter") navigate("/waiter-dashboard");
     else navigate("/");
   };
 
   const logout = () => {
-    localStorage.removeItem("role");
+    localStorage.removeItem("user");
     localStorage.removeItem("refresh");
     sessionStorage.removeItem("access");
 

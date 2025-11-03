@@ -17,7 +17,8 @@ import CustomerDashboard from "./components/customer/CustomerDashboard";
 import QRPage from "./components/customer/QRPage";
 import ForgetPassword from "./components/ForgetPassword";
 import ReviewOrder from "./components/customer/ReviewOrder";
-import OrderTracking from "./components/customer/OrderTracking";
+import LiveOrders from "./components/customer/LiveOrders"; // ✅ Added
+import OrderTracking from "./components/customer/OrderTracking"; // ✅ Updated tracking page
 
 function App() {
   return (
@@ -45,7 +46,10 @@ function App() {
         />
         <Route path="/verify-email/:token" element={<VerifyEmail />} />
         <Route path="/forget-password" element={<ForgetPassword />} />
-        <Route path="/reset-password/:userId/:token" element={<ResetPassword />} />
+        <Route
+          path="/reset-password/:userId/:token"
+          element={<ResetPassword />}
+        />
 
         {/* 🧩 Admin/Staff Dashboards */}
         <Route
@@ -77,7 +81,8 @@ function App() {
         <Route path="/table/:tableId" element={<TablePage />} />
         <Route path="/customer/dashboard" element={<CustomerDashboard />} />
         <Route path="/review-order/:tableId" element={<ReviewOrder />} />
-        <Route path="/order-tracking/:orderId" element={<OrderTracking />} />
+        <Route path="/live-orders/:tableId" element={<LiveOrders />} /> {/* ✅ Added route */}
+        <Route path="/order-tracking/:orderId" element={<OrderTracking />} /> {/* ✅ Updated path */}
 
         {/* 🚫 Fallback */}
         <Route path="*" element={<Navigate to="/" />} />

@@ -20,7 +20,7 @@ const handleLogin = async (e) => {
     const res = await loginStaff({ email, password });
     const { user, access, refresh } = res.data;
 
-    login({ role: user.role, access, refresh });
+    login({ user, access, refresh });
     if (rememberMe) localStorage.setItem("refresh", refresh);
 
     toast.success("Login successful 🎉");

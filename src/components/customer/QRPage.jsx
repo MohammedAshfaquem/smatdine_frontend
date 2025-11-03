@@ -1,26 +1,36 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useState } from "react";
+import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL // from .env file
+const API_URL = import.meta.env.VITE_API_URL; // example: http://localhost:8000
 
 export default function QRPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-
-  // ✅ Optionally get table number from query or default
   const tableNumber = searchParams.get("table") || 5;
 
   const [loading, setLoading] = useState(false);
   const [imgError, setImgError] = useState(false);
 
-  // ✅ Construct dynamic QR image path
   const qrUrl = `${API_URL}/media/qrcodes/qrcodes/table_${tableNumber}_qr.png`;
 
-  const handleScan = () => {
+  const handleScan = async () => {
     setLoading(true);
-    setTimeout(() => {
-      navigate(`/customer/dashboard?table=${tableNumber}`);
-    }, 800); // simulate scan delay
+    try {
+      // ✅ Mark table as occupied in backend
+      await axios.patch(`${API_URL}/tables/${tableNumber}/occupy/`);
+      console.log(`✅ Table ${tableNumber} marked as occupied`);
+
+      // ✅ Redirect to customer dashboard
+      setTimeout(() => {
+        navigate(`/customer/dashboard?table=${tableNumber}`);
+      }, 800);
+    } catch (error) {
+      console.error("❌ Error occupying table:", error);
+      alert("Failed to occupy table. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
