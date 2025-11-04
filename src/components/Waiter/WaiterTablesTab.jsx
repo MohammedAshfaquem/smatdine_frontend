@@ -1,26 +1,22 @@
 import { useEffect, useState } from "react";
-import api from "../../api/staff"; // ✅ use your working axios instance
+import api from "../../api/staff";
+import { toast } from "react-toastify";
 
-export default function TablesTab() {
+export default function WaiterTablesTab() {
   const [tables, setTables] = useState([]);
-  const [loading, setLoading] = useState(false);
 
   const fetchTables = async () => {
     try {
-      setLoading(true);
-      const res = await api.get("api/tables/"); // ✅ token automatically included
+      const res = await api.get("api/tables/");
       setTables(res.data);
     } catch (err) {
-      console.error("❌ Error fetching tables:", err);
-    } finally {
-      setLoading(false);
+      console.error(err);
+      toast.error("Failed to fetch tables");
     }
   };
 
   useEffect(() => {
     fetchTables();
-    const interval = setInterval(fetchTables, 5000); // refresh every 5s
-    return () => clearInterval(interval);
   }, []);
 
   const getStatusColor = (status) => {
@@ -46,14 +42,11 @@ export default function TablesTab() {
   };
 
   return (
-    <div className="p-6">
-      <h2 className="text-xl font-semibold mb-4 text-gray-800">
-        🪑 Table Overview
-      </h2>
-
-      {loading ? (
-        <p className="text-gray-500 text-center">Loading tables...</p>
-      ) : tables.length > 0 ? (
+    <div>
+      <h2 className="text-xl font-medium mb-4">🪑 Tables Overview</h2>
+      {tables.length === 0 ? (
+        <p className="text-gray-500 text-center">No tables found.</p>
+      ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
           {tables.map((table) => (
             <div
@@ -76,8 +69,6 @@ export default function TablesTab() {
             </div>
           ))}
         </div>
-      ) : (
-        <p className="text-gray-500 text-center">No tables found.</p>
       )}
     </div>
   );

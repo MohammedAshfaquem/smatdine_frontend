@@ -87,10 +87,10 @@ export default function OrderTracking() {
             <p className="text-sm text-gray-500">Table #{order.table_number}</p>
           </div>
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate(-1)}
             className="border border-emerald-300 text-black-700 px-3 py-2 rounded-lg hover:bg-emerald-50 flex items-center"
           >
-            <Home className="w-4 h-4 mr-2 " />
+            <Home className="w-4 h-4 mr-2" />
             Back to Menu
           </button>
         </div>
@@ -161,41 +161,75 @@ export default function OrderTracking() {
           </div>
         </div>
 
-        {/* Order Details */}
+        {/* ✅ Order Details */}
         <div className="bg-white border border-emerald-200 rounded-2xl p-6 mb-6 shadow-sm">
           <h3 className="text-emerald-900 mb-4 font-semibold">Order Details</h3>
           <div className="space-y-4">
-            {order.items?.map((item, idx) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between border-b border-emerald-100 pb-4 last:border-0"
-              >
-                <div className="flex items-center gap-3">
-                  {item.menu_item?.image && (
-                    <img
-                      src={
-                        item.menu_item.image.startsWith("http")
-                          ? item.menu_item.image
-                          : `${API_URL}${item.menu_item.image}`
-                      }
-                      alt={item.menu_item.name}
-                      className="w-16 h-16 rounded-lg object-cover"
-                    />
-                  )}
-                  <div>
-                    <h4 className="text-emerald-900 font-medium">
-                      {item.menu_item.name}
-                    </h4>
-                    <p className="text-sm text-gray-500">
-                      Quantity: {item.quantity}
-                    </p>
+            {order.items?.map((item, idx) => {
+              const isMenuItem = item.type === "menu_item";
+              const isCustomDish = item.type === "custom_dish";
+
+              return (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between border-b border-emerald-100 pb-4 last:border-0"
+                >
+                  <div className="flex items-center gap-3">
+                    {/* ✅ Show actual image for menu items */}
+                    {isMenuItem && item.image ? (
+                      <img
+                        src={
+                          item.image.startsWith("http")
+                            ? item.image
+                            : `${API_URL}${item.image}`
+                        }
+                        alt={item.name}
+                        className="w-16 h-16 rounded-lg object-cover"
+                      />
+                    ) : (
+                      // ✅ Show "Custom" badge for custom dishes
+                      <div className="w-16 h-16 rounded-lg bg-emerald-100 flex items-center justify-center border border-emerald-300">
+                        <span className="text-xs font-semibold text-emerald-700 px-2 py-1 bg-white rounded-md shadow-sm">
+                          Custom
+                        </span>
+                      </div>
+                    )}
+
+                    {/* ✅ Item name and details */}
+                    <div>
+                      <h4 className="text-emerald-900 font-medium">
+                        {item.name}
+                      </h4>
+                      <p className="text-sm text-gray-500">
+                        Quantity: {item.quantity}
+                      </p>
+
+                      {/* ✅ Show ingredients if custom dish */}
+                      {isCustomDish && item.ingredients?.length > 0 && (
+                        <ul className="mt-1 text-xs text-gray-600 list-disc ml-4">
+                          {item.ingredients.map((ing, i) => (
+                            <li key={i}>
+                              {ing.name} × {ing.quantity}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                      {/* ✅ Show preparation time if custom dish */}
+                      {isCustomDish && (
+                        <p className="text-xs text-emerald-700 mt-1">
+                          Prep time: {item.preparation_time} min
+                        </p>
+                      )}
+                    </div>
                   </div>
+
+                  <span className="text-emerald-700 font-semibold">
+                    ₹{parseFloat(item.subtotal || 0).toFixed(2)}
+                  </span>
                 </div>
-                <span className="text-emerald-700 font-semibold">
-                  ₹{parseFloat(item.subtotal || 0).toFixed(2)}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Total */}
@@ -228,13 +262,13 @@ export default function OrderTracking() {
             Rate Your Experience
           </button>
 
-          {/* Add modal below */}
           <FeedbackModal
             orderId={order.id}
             isOpen={showFeedback}
             onClose={() => setShowFeedback(false)}
           />
         </div>
+
         {/* Live Updates Section */}
         <div className="mt-8 border border-emerald-200 bg-emerald-50/30 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-4">
@@ -246,53 +280,46 @@ export default function OrderTracking() {
             {(() => {
               const updates = [];
 
-              const now = new Date();
               const formatTime = (date) =>
-                date.toLocaleTimeString([], {
+                new Date(date).toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",
                   second: "2-digit",
                 });
 
-              // Mock timestamps (you can later replace these with backend timestamps if available)
               const createdAt = new Date(order.created_at);
               const prepStart = new Date(createdAt.getTime() + 5 * 60000);
               const readyAt = new Date(createdAt.getTime() + 25 * 60000);
               const servedAt = new Date(createdAt.getTime() + 30 * 60000);
 
-              // Add updates based on current order status
               if (
                 ["pending", "preparing", "ready", "served"].includes(
                   order.status
                 )
-              ) {
+              )
                 updates.push({
                   time: formatTime(createdAt),
                   message: "Order received",
                   color: "text-green-600",
                 });
-              }
-              if (["preparing", "ready", "served"].includes(order.status)) {
+              if (["preparing", "ready", "served"].includes(order.status))
                 updates.push({
                   time: formatTime(prepStart),
                   message: "Chef started preparing your order",
                   color: "text-blue-600",
                 });
-              }
-              if (["ready", "served"].includes(order.status)) {
+              if (["ready", "served"].includes(order.status))
                 updates.push({
                   time: formatTime(readyAt),
                   message: "Your order is ready!",
                   color: "text-orange-600",
                 });
-              }
-              if (order.status === "served") {
+              if (order.status === "served")
                 updates.push({
                   time: formatTime(servedAt),
                   message: "Order served. Enjoy your meal!",
                   color: "text-green-700",
                 });
-              }
 
               return updates.map((u, idx) => (
                 <li key={idx} className="flex items-center gap-2">

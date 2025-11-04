@@ -7,7 +7,8 @@ import {
   CreditCard,
   BarChart3,
   Settings,
-} from "lucide-react";
+  Bell,
+} from "lucide-react"; // ✅ Added Bell icon for requests
 
 export default function WaiterSidebar({ activeTab, setActiveTab }) {
   const [user, setUser] = useState(null);
@@ -24,6 +25,7 @@ export default function WaiterSidebar({ activeTab, setActiveTab }) {
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "orders", label: "Orders", icon: ClipboardList },
     { id: "tables", label: "Tables", icon: Table2 },
+    { id: "requests", label: "Requests", icon: Bell }, // ✅ NEW Requests Tab
     { id: "reports", label: "Reports", icon: BarChart3 },
     { id: "settings", label: "Settings", icon: Settings },
   ];
@@ -47,9 +49,7 @@ export default function WaiterSidebar({ activeTab, setActiveTab }) {
           {user?.name?.charAt(0)?.toUpperCase() || "U"}
         </div>
         <div>
-          <h2 className="font-medium text-white">
-            {user?.name || "Waiter"}
-          </h2>
+          <h2 className="font-medium text-white">{user?.name || "Waiter"}</h2>
           <span className="text-xs bg-[#FACC15]/20 text-[#FACC15] px-2 py-0.5 rounded-full font-medium capitalize">
             {user?.role || "staff"}
           </span>

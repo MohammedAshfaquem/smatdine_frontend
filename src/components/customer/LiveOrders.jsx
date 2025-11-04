@@ -16,6 +16,7 @@ export default function LiveOrders({ tableId }) {
         const res = await fetch(`${API_URL}/orders/${tableId}/`);
         const data = await res.json();
         if (data.orders) setOrders(data.orders);
+        else setOrders([]);
       } catch (err) {
         console.error("Error fetching orders:", err);
         toast.error("Failed to load live orders");
@@ -37,7 +38,6 @@ export default function LiveOrders({ tableId }) {
     switch (status) {
       case "pending":
       case "received":
-      case "Order Received":
         return 25;
       case "preparing":
         return 50;
@@ -72,11 +72,33 @@ export default function LiveOrders({ tableId }) {
         {orders.map((order) => {
           const total = Number(order.total || 0).toFixed(2);
           const progress = getProgress(order.status);
-          const firstItem = order.items?.[0] || {};
-          const menuItem = firstItem.menu_item || {};
-          const imageUrl = menuItem.image
-            ? `${API_URL}${menuItem.image}`
-            : "https://cdn-icons-png.flaticon.com/512/1046/1046784.png";
+
+          // Pick the first item for preview
+          const firstItem = order.items?.[0];
+
+          let imageUrl = "https://cdn-icons-png.flaticon.com/512/1046/1046784.png";
+          let itemName = "Custom Order";
+          let itemDesc = "";
+
+          if (firstItem) {
+            if (firstItem.type === "menu_item") {
+              // ✅ Regular menu item
+              imageUrl = firstItem.image
+                ? `${API_URL}${firstItem.image}`
+                : "https://cdn-icons-png.flaticon.com/512/1046/1046784.png";
+              itemName = firstItem.name || "Food Item";
+              itemDesc = `Qty: ${firstItem.quantity}`;
+            } else if (firstItem.type === "custom_dish") {
+              // ✅ Custom dish (no image, but list ingredients)
+              itemName = firstItem.name || "Custom Dish";
+              const ingredientNames = firstItem.ingredients
+                ?.map((ing) => `${ing.name} (${ing.quantity})`)
+                .join(", ");
+              itemDesc = `Ingredients: ${ingredientNames || "N/A"}`;
+              imageUrl =
+                "https://cdn-icons-png.flaticon.com/512/3175/3175148.png"; // 🥗 custom dish icon
+            }
+          }
 
           return (
             <div
@@ -133,16 +155,12 @@ export default function LiveOrders({ tableId }) {
               <div className="flex items-center gap-3 mb-5">
                 <img
                   src={imageUrl}
-                  alt={menuItem.name || "Order Item"}
-                  className="w-12 h-12 object-cover rounded-lg"
+                  alt={itemName}
+                  className="w-12 h-12 object-cover rounded-lg border border-gray-200"
                 />
                 <div>
-                  <p className="text-gray-800 font-medium">
-                    {menuItem.name || "Food Item"}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Qty: {firstItem.quantity || 1}
-                  </p>
+                  <p className="text-gray-800 font-medium">{itemName}</p>
+                  <p className="text-sm text-gray-500">{itemDesc}</p>
                 </div>
               </div>
 

@@ -17,8 +17,17 @@ import CustomerDashboard from "./components/customer/CustomerDashboard";
 import QRPage from "./components/customer/QRPage";
 import ForgetPassword from "./components/ForgetPassword";
 import ReviewOrder from "./components/customer/ReviewOrder";
-import LiveOrders from "./components/customer/LiveOrders"; // ✅ Added
-import OrderTracking from "./components/customer/OrderTracking"; // ✅ Updated tracking page
+import LiveOrders from "./components/customer/LiveOrders";
+import OrderTracking from "./components/customer/OrderTracking";
+
+// Custom Dishes Flow
+import CustomDishes from "./components/customer/CustomDishes";
+import Step1Page from "./components/customer/Step1Page";
+import Step2Page from "./components/customer/Step2Page";
+import Step3Page from "./components/customer/Step3Page";
+// (Optional future steps)
+// import Step2Page from "./components/customer/customdish/Step2Page";
+// import Step3Page from "./components/customer/customdish/Step3Page";
 
 function App() {
   return (
@@ -81,8 +90,18 @@ function App() {
         <Route path="/table/:tableId" element={<TablePage />} />
         <Route path="/customer/dashboard" element={<CustomerDashboard />} />
         <Route path="/review-order/:tableId" element={<ReviewOrder />} />
-        <Route path="/live-orders/:tableId" element={<LiveOrders />} /> {/* ✅ Added route */}
-        <Route path="/order-tracking/:orderId" element={<OrderTracking />} /> {/* ✅ Updated path */}
+        <Route path="/live-orders/:tableId" element={<LiveOrders />} />
+        <Route path="/order-tracking/:orderId" element={<OrderTracking />} />
+
+        {/* 🧃 Custom Dish Creation Flow */}
+        <Route path="/custom-dishes" element={<CustomDishes />} />
+        <Route path="/step1/:tableId" element={<Step1Page />} />
+        <Route path="/step2/:tableId" element={<Step2Page />} />
+        <Route path="/step3/:tableId" element={<Step3Page />} />
+
+        {/* Optional future steps */}
+        {/* <Route path="/step2" element={<Step2Page />} />
+        <Route path="/step3" element={<Step3Page />} /> */}
 
         {/* 🚫 Fallback */}
         <Route path="*" element={<Navigate to="/" />} />

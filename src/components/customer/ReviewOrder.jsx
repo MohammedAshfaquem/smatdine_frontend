@@ -10,6 +10,7 @@ export default function ReviewOrder() {
   const { tableId } = useParams();
   const [cartItems, setCartItems] = useState([]);
   const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   // 🛒 Fetch cart items
   useEffect(() => {
@@ -20,7 +21,10 @@ export default function ReviewOrder() {
         setCartItems(data.items || []);
         setTotal(data.total_amount || 0);
       } catch (err) {
-        console.error("Error fetching cart:", err);
+        console.error("Error fetching cart:", err);x
+        toast.error("Failed to load cart.");
+      } finally {
+        setLoading(false);
       }
     };
     fetchCart();
@@ -35,25 +39,32 @@ export default function ReviewOrder() {
         body: JSON.stringify({ table_number: tableId }),
       });
 
-      if (!res.ok) throw new Error("Failed to place order");
-
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to place order");
+
       toast.success("Order placed successfully!");
 
-      // navigate with order details
       navigate(`/order-tracking/${data.order.id}`, {
         state: { order: data.order },
       });
     } catch (err) {
       console.error(err);
-      toast.error("Failed to place order. Please try again.");
+      toast.error(err.message || "Failed to place order. Please try again.");
     }
   };
 
-  // Calculate subtotal and tax
+  // 💰 Calculate subtotal and tax
   const subtotal = total;
   const tax = subtotal * 0.08;
   const totalAmount = subtotal + tax;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-500">
+        Loading your order...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -78,7 +89,7 @@ export default function ReviewOrder() {
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-8 space-y-6">
-        {/* Delivery Location */}
+        {/* Table Info */}
         <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-200">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -89,7 +100,7 @@ export default function ReviewOrder() {
                 Delivery Location
               </p>
               <p className="text-emerald-800 text-lg font-bold">
-                Table {tableId || "TABLE-12"}
+                Table {tableId || "N/A"}
               </p>
             </div>
           </div>
@@ -107,58 +118,75 @@ export default function ReviewOrder() {
             </p>
           ) : (
             <div className="space-y-4">
-              {cartItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-4 pb-4 border-b border-gray-100 last:border-0"
-                >
-                  {/* Item Image */}
-                  {item.menu_item?.image && (
-                    <img
-                      src={
-                        item.menu_item?.image?.startsWith("http")
-                          ? item.menu_item.image
-                          : `${API_URL}${item.menu_item.image}`
-                      }
-                      alt={item.menu_item?.name}
-                      className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
-                    />
-                  )}
+              {cartItems.map((item) => {
+                const menuItem = item.menu_item;
+                const customDish = item.custom_dish;
 
-                  {/* Item Details */}
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-emerald-800 text-base mb-1">
-                      {item.menu_item?.name}
-                    </h3>
-                    
-                     {item.menu_item?.spice_level !== undefined && (
-                        <div className="flex items-center gap-1 mb-3">
-                          <span className="text-xs text-gray-600">
-                            {item.menu_item.spice_level === 0
-                              ? "No Spicy"
-                              : `Spice Level: ${item.menu_item.spice_level}/3`}
-                          </span>
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-start gap-4 pb-4 border-b border-gray-100 last:border-0"
+                  >
+                    {/* Image */}
+                    {menuItem?.image && (
+                      <img
+                        src={
+                          menuItem.image.startsWith("http")
+                            ? menuItem.image
+                            : `${API_URL}${menuItem.image}`
+                        }
+                        alt={menuItem.name}
+                        className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
+                      />
+                    )}
+
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-emerald-800 text-base mb-1">
+                        {menuItem?.name || customDish?.name}
+                      </h3>
+
+                      {/* Custom dish ingredients */}
+                      {customDish && (
+                        <div className="text-sm text-gray-600 mb-1">
+                          {customDish.dish_ingredients
+                            ?.map((d) => `${d.ingredient.name} ×${d.quantity}`)
+                            .join(", ")}
                         </div>
                       )}
 
-                  </div>
+                      {/* Spice level */}
+                      {menuItem?.spice_level !== undefined && (
+                        <div className="text-xs text-gray-500 mb-1">
+                          {menuItem.spice_level === 0
+                            ? "No Spicy"
+                            : `Spice Level: ${menuItem.spice_level}/3`}
+                        </div>
+                      )}
 
-                  {/* Price & Quantity */}
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-emerald-600">
-                      ₹{parseFloat(item.subtotal || 0).toFixed(2)}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Qty: {item.quantity}
-                    </p>
+                      {/* Special Instructions */}
+                      {item.special_instructions && (
+                        <p className="text-xs text-gray-500 italic mt-1">
+                          “{item.special_instructions}”
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-emerald-600">
+                        ₹{parseFloat(item.subtotal || 0).toFixed(2)}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Qty: {item.quantity}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
 
-        {/* Price Details */}
+        {/* Price Summary */}
         <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-200">
           <h2 className="text-xl font-medium text-emerald-800 mb-6">
             Price Details
@@ -195,7 +223,7 @@ export default function ReviewOrder() {
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Buttons */}
         <div className="grid grid-cols-2 gap-4">
           <button
             onClick={() => navigate(-1)}
