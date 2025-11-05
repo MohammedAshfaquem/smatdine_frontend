@@ -29,6 +29,7 @@ export default function Step3Page() {
   const [specialInstructions, setSpecialInstructions] = useState("");
   const [saveForFuture, setSaveForFuture] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [dishImageUrl, setDishImageUrl] = useState(""); // New state for image
 
   // ✅ API URL
   const API_URL = "http://localhost:8000";
@@ -56,9 +57,13 @@ export default function Step3Page() {
         `${API_URL}/custom-dish/create/${tableId}/`,
         payload
       );
+
+      // Save the returned image URL
+      setDishImageUrl(res.data.image_url);
+
       toast.success("Custom dish created and added to cart!");
       navigate(`/review-order/${tableId}`, {
-        state: { dish: res.data.dish },
+        state: { dish: res.data.dish, imageUrl: res.data.image_url },
       });
     } catch (err) {
       console.error(err);
@@ -98,9 +103,7 @@ export default function Step3Page() {
             </div>
             <button
               className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center"
-               onClick={() =>
-              navigate(`/customer/dashboard`)
-            }
+              onClick={() => navigate(`/customer/dashboard`)}
             >
               <X size={20} className="text-white" />
             </button>
@@ -109,7 +112,6 @@ export default function Step3Page() {
           {/* ✅ Progress Stepper */}
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
-              {/* Steps */}
               {["Choose Base", "Add Ingredients", "Finalize"].map(
                 (label, i) => (
                   <div
@@ -165,6 +167,7 @@ export default function Step3Page() {
         <div className="grid grid-cols-2 gap-8">
           {/* ✅ Left Column */}
           <div className="space-y-6">
+            {/* Dish Name */}
             <div>
               <label className="block text-base font-bold text-emerald-800 mb-3">
                 Name Your Creation <span className="text-red-500">*</span>
@@ -178,6 +181,7 @@ export default function Step3Page() {
               />
             </div>
 
+            {/* Special Instructions */}
             <div>
               <label className="block text-base font-bold text-emerald-800 mb-3">
                 Special Instructions (Optional)
@@ -191,7 +195,8 @@ export default function Step3Page() {
               />
             </div>
 
-            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-5 border-2 border-emerald-200">
+            {/* Save for Future Orders */}
+            {/* <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-5 border-2 border-emerald-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center">
@@ -216,11 +221,23 @@ export default function Step3Page() {
                   <div className="w-14 h-7 bg-gray-300 rounded-full peer peer-checked:bg-emerald-600 after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-full"></div>
                 </label>
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* ✅ Right Column - Summary */}
           <div className="bg-white rounded-3xl p-8 shadow-sm border-2 border-emerald-200 h-fit sticky top-6">
+            {/* {dishImageUrl ? (
+              <img
+                src={dishImageUrl}
+                alt={dishName}
+                className="w-full h-60 object-cover rounded-2xl mb-6 shadow-md"
+              />
+            ) : (
+              <div className="w-full h-60 bg-gray-200 flex items-center justify-center rounded-2xl mb-6">
+                <span className="text-gray-400">Dish Preview</span>
+              </div>
+            )} */}
+
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-bold text-emerald-800">
                 Order Summary
@@ -230,18 +247,18 @@ export default function Step3Page() {
               </div>
             </div>
 
+            {/* Base */}
             <div className="mb-6">
               <p className="text-gray-600 text-sm font-semibold mb-3">Base:</p>
               <div className="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-xl">
-                <span className="font-semibold text-gray-900">
-                  {base?.name}
-                </span>
+                <span className="font-semibold text-gray-900">{base?.name}</span>
                 <span className="font-bold text-emerald-600">
                   ₹{baseSelectionPrice.toFixed(2)}
                 </span>
               </div>
             </div>
 
+            {/* Ingredients */}
             <div className="mb-6">
               <p className="text-gray-600 text-sm font-semibold mb-3">
                 Ingredients ({selectedIngredients.length}):
@@ -263,12 +280,11 @@ export default function Step3Page() {
               </div>
             </div>
 
+            {/* Totals */}
             <div className="space-y-3 pt-6 border-t-2 border-gray-200">
               <div className="flex items-center justify-between text-gray-700">
                 <span className="font-medium">Ingredients Total:</span>
-                <span className="font-semibold">
-                  ₹{ingredientsTotal.toFixed(2)}
-                </span>
+                <span className="font-semibold">₹{ingredientsTotal.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between pt-4 border-t-2 border-gray-200">
                 <span className="text-xl font-bold text-gray-900">Total:</span>

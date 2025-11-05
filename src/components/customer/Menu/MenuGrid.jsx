@@ -11,7 +11,9 @@ export default function MenuGrid({
   // 🔥 Helper: Render spice icons or "No spice"
   const renderSpiceIcons = (level) => {
     if (!level || level === 0)
-      return <span className="text-xs text-gray-500 font-medium">No spice</span>;
+      return (
+        <span className="text-xs text-gray-500 font-medium">No spice</span>
+      );
 
     return Array.from({ length: level }, (_, i) => (
       <Flame key={i} size={14} className="text-orange-500" />
@@ -79,11 +81,18 @@ export default function MenuGrid({
             />
 
             {/* ✅ Availability Badge */}
-            {item.availability && (
-              <div className="absolute top-3 right-3 px-3 py-1 bg-emerald-600 text-white text-xs font-semibold rounded-lg shadow-md">
-                Available
-              </div>
-            )}
+            {/* ✅ Availability Badge with stock check */}
+            <div className="absolute top-3 right-3">
+              {item.stock > 0 ? (
+                <div className="px-3 py-1 bg-emerald-600 text-white text-xs font-semibold rounded-lg shadow-md">
+                  Available
+                </div>
+              ) : (
+                <div className="px-3 py-1 bg-red-500 text-white text-xs font-semibold rounded-lg shadow-md">
+                  Unavailable
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 📜 Details Section */}

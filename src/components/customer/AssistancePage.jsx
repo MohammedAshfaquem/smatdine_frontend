@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Droplets, Receipt, Brush } from "lucide-react";
+import { Droplets, Receipt, Brush, MessageSquare } from "lucide-react";
 import { toast } from "react-toastify";
 import ConfirmationModal from "../ConfirmationModal.jsx";
 
 export default function AssistancePage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState(null);
+  const [generalMessage, setGeneralMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [requests, setRequests] = useState([]);
 
@@ -30,25 +31,37 @@ export default function AssistancePage() {
 
     setLoading(true);
     try {
+      let reqType = "";
+      let bodyData = {};
+
+      if (selectedAction === "Need Water") reqType = "need water";
+      else if (selectedAction === "Need Bill") reqType = "need bill";
+      else if (selectedAction === "Clean Table") reqType = "clean table";
+      else if (selectedAction === "General Request") {
+        reqType = "general";
+        if (!generalMessage.trim()) {
+          toast.error("Please enter your request message!");
+          setLoading(false);
+          return;
+        }
+        bodyData.description = generalMessage.trim();
+      }
+
+      bodyData.type = reqType;
+
       const response = await fetch(
         `http://127.0.0.1:8000/waiter-request/${tableId}/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type:
-              selectedAction === "Need Water"
-                ? "need water"
-                : selectedAction === "Need Bill"
-                ? "need bill"
-                : "clean table",
-          }),
+          body: JSON.stringify(bodyData),
         }
       );
 
       const data = await response.json();
       if (response.ok) {
         toast.success(data.message);
+        setGeneralMessage("");
         fetchRequests();
       } else {
         toast.error(data.error || "Request failed");
@@ -100,106 +113,174 @@ export default function AssistancePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] p-8 text-[#1F2937]">
-      <h2 className="text-2xl font-bold text-[#059669] mb-2">
-        🧑‍🍳 Request Assistance
-      </h2>
-      <p className="text-gray-500 mb-6">
-        Select an option below to notify a waiter instantly.
-      </p>
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-7xl mx-auto">
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+          Request Assistance
+        </h2>
+        <p className="text-gray-600 mb-8">
+          Select an option below to notify a waiter instantly.
+        </p>
 
-      {/* --- Action Buttons --- */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-        <button
-          onClick={() => handleActionClick("Need Water")}
-          className="bg-white border border-[#059669]/30 rounded-2xl shadow-sm hover:shadow-md transition p-6 flex flex-col items-center justify-center"
-        >
-          <Droplets className="text-[#059669] mb-3" size={36} />
-          <h3 className="font-semibold text-lg text-[#059669] mb-1">
-            Need Water
-          </h3>
-          <p className="text-sm text-gray-500">Request drinking water</p>
-        </button>
+        {/* --- Action Buttons --- */}
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 mb-12">
+          {/* Need Water */}
+          <button
+            onClick={() => handleActionClick("Need Water")}
+            className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-lg hover:border-emerald-300 transition-all duration-300 p-6 flex flex-col items-center justify-center group"
+          >
+            <Droplets
+              className="text-emerald-600 mb-3 group-hover:scale-110 transition-transform duration-300"
+              size={40}
+            />
+            <h3 className="font-semibold text-lg text-gray-900 mb-1">
+              Need Water
+            </h3>
+            <p className="text-sm text-gray-500">Request drinking water</p>
+          </button>
 
-        <button
-          onClick={() => handleActionClick("Need Bill")}
-          className="bg-white border border-[#059669]/30 rounded-2xl shadow-sm hover:shadow-md transition p-6 flex flex-col items-center justify-center"
-        >
-          <Receipt className="text-[#059669] mb-3" size={36} />
-          <h3 className="font-semibold text-lg text-[#059669] mb-1">
-            Need Bill
-          </h3>
-          <p className="text-sm text-gray-500">Request your final bill</p>
-        </button>
+          {/* Need Bill */}
+          <button
+            onClick={() => handleActionClick("Need Bill")}
+            className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-lg hover:border-emerald-300 transition-all duration-300 p-6 flex flex-col items-center justify-center group"
+          >
+            <Receipt
+              className="text-emerald-600 mb-3 group-hover:scale-110 transition-transform duration-300"
+              size={40}
+            />
+            <h3 className="font-semibold text-lg text-gray-900 mb-1">
+              Need Bill
+            </h3>
+            <p className="text-sm text-gray-500">Request your final bill</p>
+          </button>
 
-        <button
-          onClick={() => handleActionClick("Clean Table")}
-          className="bg-white border border-[#059669]/30 rounded-2xl shadow-sm hover:shadow-md transition p-6 flex flex-col items-center justify-center"
-        >
-          <Brush className="text-[#059669] mb-3" size={36} />
-          <h3 className="font-semibold text-lg text-[#059669] mb-1">
-            Clean Table
-          </h3>
-          <p className="text-sm text-gray-500">Ask staff to clean the table</p>
-        </button>
-      </div>
+          {/* Clean Table */}
+          <button
+            onClick={() => handleActionClick("Clean Table")}
+            className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-lg hover:border-emerald-300 transition-all duration-300 p-6 flex flex-col items-center justify-center group"
+          >
+            <Brush
+              className="text-emerald-600 mb-3 group-hover:scale-110 transition-transform duration-300"
+              size={40}
+            />
+            <h3 className="font-semibold text-lg text-gray-900 mb-1">
+              Clean Table
+            </h3>
+            <p className="text-sm text-gray-500">Ask staff to clean the table</p>
+          </button>
 
-      {/* --- User's Assistance Requests --- */}
-      <div className="bg-white rounded-2xl shadow-md p-6">
-        <h3 className="text-lg font-semibold mb-4 text-[#059669]">
-          📋 Your Assistance Requests
-        </h3>
+          {/* General Request */}
+          <button
+            onClick={() => handleActionClick("General Request")}
+            className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-lg hover:border-emerald-300 transition-all duration-300 p-6 flex flex-col items-center justify-center group"
+          >
+            <MessageSquare
+              className="text-emerald-600 mb-3 group-hover:scale-110 transition-transform duration-300"
+              size={40}
+            />
+            <h3 className="font-semibold text-lg text-gray-900 mb-1">
+              General Request
+            </h3>
+            <p className="text-sm text-gray-500">Send a custom request</p>
+          </button>
+        </div>
 
-        {requests.length === 0 ? (
-          <p className="text-gray-500 text-sm">
-            You haven’t made any requests yet.
-          </p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm border-collapse">
-              <thead className="bg-[#059669] text-white">
-                <tr>
-                  <th className="px-4 py-3 text-left">#</th>
-                  <th className="px-4 py-3 text-left">Type</th>
-                  <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-left">Requested At</th>
-                </tr>
-              </thead>
-              <tbody>
-                {requests.map((req, index) => (
-                  <tr key={req.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3">{index + 1}</td>
-                    <td className="px-4 py-3 capitalize">{req.type}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(
-                          req.status
-                        )}`}
-                      >
-                        {req.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">
-                      {new Date(req.created_at).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* --- User's Assistance Requests --- */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="px-6 py-5 border-b border-gray-200">
+            <h3 className="text-xl font-bold text-gray-900">
+              Your Assistance Requests
+            </h3>
           </div>
-        )}
+
+          {requests.length === 0 ? (
+            <div className="px-6 py-12 text-center">
+              <p className="text-gray-500">
+                You haven't made any requests yet.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      ID
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Type
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Requested At
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {requests.map((req, index) => (
+                    <tr
+                      key={req.id}
+                      className="hover:bg-gray-50 transition-colors duration-150"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        REQ-{String(index + 1).padStart(3, "0")}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize">
+                        {req.type}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(
+                            req.status
+                          )}`}
+                        >
+                          {req.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(req.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* --- Confirmation Modal --- */}
       <ConfirmationModal
         isOpen={modalOpen}
         title="Confirm Assistance"
-        message={`Do you want to request "${selectedAction}"?`}
+        message={
+          selectedAction === "General Request" ? (
+            <div className="space-y-3">
+              <p className="text-gray-700 text-sm">
+                Enter your request message below:
+              </p>
+              <textarea
+                rows="3"
+                value={generalMessage}
+                onChange={(e) => setGeneralMessage(e.target.value)}
+                placeholder="Type your request here..."
+                className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              />
+            </div>
+          ) : (
+            `Do you want to request "${selectedAction}"?`
+          )
+        }
         onConfirm={handleConfirm}
-        onCancel={() => setModalOpen(false)}
+        onCancel={() => {
+          setModalOpen(false);
+          setGeneralMessage("");
+        }}
         confirmText={loading ? "Requesting..." : "Yes, Request"}
         cancelText="Cancel"
         type="approve"

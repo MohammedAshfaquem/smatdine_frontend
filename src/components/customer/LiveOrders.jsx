@@ -1,5 +1,6 @@
+// LiveOrders.jsx
 import { useEffect, useState } from "react";
-import { Eye, CheckCircle, Loader } from "lucide-react";
+import { Eye, CheckCircle, Loader, Search, Filter, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -7,9 +8,14 @@ const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export default function LiveOrders({ tableId }) {
   const [orders, setOrders] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All Status');
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const navigate = useNavigate();
 
-  // 🔁 Fetch orders periodically
+  const statuses = ['All Status', 'Pending', 'Preparing', 'Ready', 'Served'];
+
+  // Fetch orders periodically
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -28,12 +34,10 @@ export default function LiveOrders({ tableId }) {
     return () => clearInterval(interval);
   }, [tableId]);
 
-  // 🧭 Navigate to order tracking page
   const handleViewDetails = (order) => {
     navigate(`/order-tracking/${order.id}`, { state: { order } });
   };
 
-  // ⏱️ Determine progress based on order status
   const getProgress = (status) => {
     switch (status) {
       case "pending":
@@ -50,11 +54,24 @@ export default function LiveOrders({ tableId }) {
     }
   };
 
-  // 🧩 Fallback if no orders
+  // Filter orders based on search and status
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch =
+      order.id.toString().includes(searchQuery) ||
+      order.table_number?.toString().includes(searchQuery) ||
+      order.table?.toString().includes(searchQuery);
+
+    const matchesStatus =
+      statusFilter === 'All Status' ||
+      order.status.toLowerCase() === statusFilter.toLowerCase();
+
+    return matchesSearch && matchesStatus;
+  });
+
   if (orders.length === 0) {
     return (
-      <div className="min-h-screen bg-[#F9FAFB] flex flex-col items-center justify-center text-gray-500">
-        <h2 className="text-2xl font-bold text-[#059669] mb-2">
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center text-gray-500">
+        <h2 className="text-2xl font-bold text-emerald-600 mb-2">
           🕒 Live Order Tracking
         </h2>
         <p>No active orders for this table.</p>
@@ -63,118 +80,174 @@ export default function LiveOrders({ tableId }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] px-10 py-8">
-      <h2 className="text-2xl font-bold text-[#059669] mb-2">Live Order Tracking</h2>
-      <p className="text-gray-500 mb-8">Monitor your orders in real-time</p>
+    <div className="min-h-screen bg-gray-50 px-6 py-8">
+      <div className="max-w-7xl mx-auto">
+        <h2 className="text-2xl font-bold text-emerald-600 mb-2">Live Order Tracking</h2>
+        <p className="text-gray-500 mb-8">Monitor your orders in real-time</p>
 
-      {/* 2 orders per row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {orders.map((order) => {
-          const total = Number(order.total || 0).toFixed(2);
-          const progress = getProgress(order.status);
+        {/* Search & Filter */}
+        <div className="flex items-center gap-4 mb-8">
+          <div className="flex-1 relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by table number or request type..."
+              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900 bg-white"
+            />
+          </div>
 
-          // Pick the first item for preview
-          const firstItem = order.items?.[0];
-
-          let imageUrl = "https://cdn-icons-png.flaticon.com/512/1046/1046784.png";
-          let itemName = "Custom Order";
-          let itemDesc = "";
-
-          if (firstItem) {
-            if (firstItem.type === "menu_item") {
-              // ✅ Regular menu item
-              imageUrl = firstItem.image
-                ? `${API_URL}${firstItem.image}`
-                : "https://cdn-icons-png.flaticon.com/512/1046/1046784.png";
-              itemName = firstItem.name || "Food Item";
-              itemDesc = `Qty: ${firstItem.quantity}`;
-            } else if (firstItem.type === "custom_dish") {
-              // ✅ Custom dish (no image, but list ingredients)
-              itemName = firstItem.name || "Custom Dish";
-              const ingredientNames = firstItem.ingredients
-                ?.map((ing) => `${ing.name} (${ing.quantity})`)
-                .join(", ");
-              itemDesc = `Ingredients: ${ingredientNames || "N/A"}`;
-              imageUrl =
-                "https://cdn-icons-png.flaticon.com/512/3175/3175148.png"; // 🥗 custom dish icon
-            }
-          }
-
-          return (
-            <div
-              key={order.id}
-              className="bg-white border border-[#059669]/30 rounded-2xl p-5 shadow-sm hover:shadow-md transition"
+          <div className="relative">
+            <button
+              onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+              className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 transition-all duration-300"
             >
-              {/* Header */}
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="font-semibold text-gray-800">
-                  Order <span className="text-gray-600">#{order.id}</span>
-                </h3>
+              <Filter size={18} className="text-gray-600" />
+              <span className="text-gray-700 font-medium">{statusFilter}</span>
+              <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
 
-                <span
-                  className={`px-3 py-1 text-sm rounded-full flex items-center gap-1 ${
-                    order.status === "pending" || order.status === "received"
-                      ? "bg-[#D1FAE5] text-[#059669]"
-                      : order.status === "preparing"
-                      ? "bg-[#FEF9C3] text-[#CA8A04]"
-                      : order.status === "ready"
-                      ? "bg-[#DBEAFE] text-[#2563EB]"
-                      : "bg-[#DCFCE7] text-[#16A34A]"
-                  }`}
-                >
-                  {order.status === "preparing" ? (
-                    <Loader size={14} className="animate-spin" />
-                  ) : (
-                    <CheckCircle size={14} />
-                  )}
-                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                </span>
+            {showStatusDropdown && (
+              <div className="absolute top-full mt-2 right-0 w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-50">
+                {statuses.map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => {
+                      setStatusFilter(status);
+                      setShowStatusDropdown(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-all duration-200 first:rounded-t-xl last:rounded-b-xl ${
+                      statusFilter === status ? 'bg-emerald-100' : ''
+                    }`}
+                  >
+                    <span className="text-gray-900 font-medium text-sm">{status}</span>
+                    {statusFilter === status && (
+                      <Check size={16} className="ml-auto text-emerald-600" strokeWidth={3} />
+                    )}
+                  </button>
+                ))}
               </div>
+            )}
+          </div>
+        </div>
 
-              {/* Total */}
-              <div className="text-right text-gray-700 font-semibold mb-3">
-                ₹{total}
-              </div>
+        {/* Orders Grid */}
+        {filteredOrders.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-gray-500 text-lg">No orders match your filters</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {filteredOrders.map((order) => {
+              const total = Number(order.total || 0).toFixed(2);
+              const progress = getProgress(order.status);
 
-              {/* Table & Items */}
-              <p className="text-sm text-gray-500 mb-1">
-                Table {order.table_number || order.table} •{" "}
-                {order.items?.length || 0} item
-                {order.items?.length > 1 ? "s" : ""}
-              </p>
+              // Decide preview image
+              let imageUrl = "https://cdn-icons-png.flaticon.com/512/1046/1046784.png";
+              let itemName = "Custom Order";
+              let itemDesc = "";
 
-              {/* Progress bar */}
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+              if (order.items?.length === 1 && order.items[0].type === "custom_dish") {
+                // Only one item and it's a custom dish → show its image
+                const customItem = order.items[0];
+                imageUrl = customItem.image || imageUrl;
+                itemName = customItem.name || "Custom Dish";
+                const ingredientNames = customItem.ingredients
+                  ?.map((ing) => `${ing.name} (${ing.quantity})`)
+                  .join(", ");
+                itemDesc = `Ingredients: ${ingredientNames || "N/A"}`;
+              } else {
+                // Multi-item or first item is a menu item → show first menu item image
+                const firstMenuItem = order.items.find((i) => i.type === "menu_item");
+                if (firstMenuItem) {
+                  imageUrl = firstMenuItem.image
+                    ? firstMenuItem.image.startsWith("http")
+                      ? firstMenuItem.image
+                      : `${API_URL}${firstMenuItem.image}`
+                    : imageUrl;
+                  itemName = firstMenuItem.name || "Food Item";
+                  itemDesc = `Qty: ${firstMenuItem.quantity}`;
+                }
+              }
+
+              return (
                 <div
-                  className="h-2 rounded-full bg-[#059669]"
-                  style={{ width: `${progress}%` }}
-                ></div>
-              </div>
+                  key={order.id}
+                  className="bg-white border border-emerald-600/30 rounded-2xl p-5 shadow-sm hover:shadow-md transition"
+                >
+                  {/* Header */}
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-semibold text-gray-800">
+                      Order <span className="text-gray-600">#{order.id}</span>
+                    </h3>
 
-              {/* Item Preview */}
-              <div className="flex items-center gap-3 mb-5">
-                <img
-                  src={imageUrl}
-                  alt={itemName}
-                  className="w-12 h-12 object-cover rounded-lg border border-gray-200"
-                />
-                <div>
-                  <p className="text-gray-800 font-medium">{itemName}</p>
-                  <p className="text-sm text-gray-500">{itemDesc}</p>
+                    <span
+                      className={`px-3 py-1 text-sm rounded-full flex items-center gap-1 ${
+                        order.status === "pending" || order.status === "received"
+                          ? "bg-emerald-100 text-emerald-600"
+                          : order.status === "preparing"
+                          ? "bg-yellow-100 text-yellow-600"
+                          : order.status === "ready"
+                          ? "bg-blue-100 text-blue-600"
+                          : "bg-green-100 text-green-600"
+                      }`}
+                    >
+                      {order.status === "preparing" ? (
+                        <Loader size={14} className="animate-spin" />
+                      ) : (
+                        <CheckCircle size={14} />
+                      )}
+                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                    </span>
+                  </div>
+
+                  {/* Total */}
+                  <div className="text-right text-gray-700 font-semibold mb-3">
+                    ₹{total}
+                  </div>
+
+                  {/* Table & Items */}
+                  <p className="text-sm text-gray-500 mb-1">
+                    Table {order.table_number || order.table} • {order.items?.length || 0} item{order.items?.length > 1 ? "s" : ""}
+                  </p>
+
+                  {/* Progress bar */}
+                  <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                    <div
+                      className="h-2 rounded-full bg-emerald-600"
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                  </div>
+
+                  {/* Item Preview */}
+                  <div className="flex items-center gap-3 mb-5">
+                    <img
+                      src={imageUrl}
+                      alt={itemName}
+                      className="w-12 h-12 object-cover rounded-lg border border-gray-200"
+                    />
+                    <div>
+                      <p className="text-gray-800 font-medium">{itemName}</p>
+                      <p className="text-sm text-gray-500">{itemDesc}</p>
+                    </div>
+                  </div>
+
+                  {/* View Button */}
+                  <button
+                    onClick={() => handleViewDetails(order)}
+                    className="w-full flex justify-center items-center gap-2 border border-emerald-600/40 text-emerald-600 py-2 rounded-xl hover:bg-emerald-600/10 transition"
+                  >
+                    <Eye size={16} />
+                    View Full Details
+                  </button>
                 </div>
-              </div>
-
-              {/* View Button */}
-              <button
-                onClick={() => handleViewDetails(order)}
-                className="w-full flex justify-center items-center gap-2 border border-[#059669]/40 text-[#059669] py-2 rounded-xl hover:bg-[#059669]/10 transition"
-              >
-                <Eye size={16} />
-                View Full Details
-              </button>
-            </div>
-          );
-        })}
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

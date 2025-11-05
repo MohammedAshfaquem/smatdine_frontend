@@ -49,9 +49,27 @@ export default function RestaurantMenu() {
     }
   };
 
+  // 🟢 Fetch cart count from backend
+  const fetchCartCount = async () => {
+    if (!tableNumber) return;
+    try {
+      const res = await axios.get(`${BASE_URL}/cart/count/${tableNumber}/`);
+      setCartCount(res.data.count);
+    } catch (err) {
+      console.error("Failed to fetch cart count", err);
+      setCartCount(0);
+    }
+  };
+
   useEffect(() => {
     fetchMenuItems(selectedFilter, selectedCategory);
   }, [selectedFilter, selectedCategory]);
+
+  useEffect(() => {
+    if (tableNumber) {
+      fetchCartCount();
+    }
+  }, [tableNumber]);
 
   // 🟢 Add to Cart
   const handleAddToCart = async (item, quantity, specialInstructions) => {
@@ -67,7 +85,9 @@ export default function RestaurantMenu() {
         special_instructions: specialInstructions || "",
       });
       toast.success(response.data.message);
-      setCartCount((prev) => prev + 1);
+
+      // Refresh cart count from backend instead of manual increment
+      fetchCartCount();
     } catch {
       toast.error("Failed to add item to cart");
     }
@@ -97,7 +117,7 @@ export default function RestaurantMenu() {
             setSelectedCategory={setSelectedCategory}
           />
 
-          <CustomDishSection />
+          {/* <CustomDishSection /> */}
 
           <MenuGrid
             loading={loading}
@@ -114,15 +134,20 @@ export default function RestaurantMenu() {
         showCart={showCart}
         setShowCart={setShowCart}
         tableId={tableNumber}
+        
+        onCartChange={fetchCartCount} 
+        
       />
 
       {selectedItem && (
-        <ItemModal
-          item={selectedItem}
-          onClose={() => setSelectedItem(null)}
-          onAddToCart={handleAddToCart}
-        />
-      )}
+  <ItemModal
+    item={selectedItem}
+    tableNumber={tableNumber}   // ✅ add this line
+    onClose={() => setSelectedItem(null)}
+    onAddToCart={handleAddToCart}
+  />
+)}
+
     </div>
   );
 }

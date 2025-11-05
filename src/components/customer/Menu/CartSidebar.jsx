@@ -4,28 +4,28 @@ import { X, Trash2, Minus, Plus, ArrowRight } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
-export default function CartSidebar({ showCart, setShowCart, tableId }) {
+export default function CartSidebar({ showCart, setShowCart, tableId, onCartChange }) {
   const [cartItems, setCartItems] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [clearing, setClearing] = useState(false);
   const navigate = useNavigate();
 
   // 🛒 Fetch cart
-  useEffect(() => {
+  const fetchCart = async () => {
     if (!tableId) return;
+    try {
+      const res = await fetch(`${API_URL}/cart/${tableId}/`);
+      if (!res.ok) throw new Error("Failed to fetch cart");
+      const data = await res.json();
+      setCartItems(data.items || []);
+      setTotalAmount(data.total_amount || 0);
+      if (onCartChange) onCartChange(data.items?.length || 0); // update parent badge
+    } catch (err) {
+      console.error("Error fetching cart:", err);
+    }
+  };
 
-    const fetchCart = async () => {
-      try {
-        const res = await fetch(`${API_URL}/cart/${tableId}/`);
-        if (!res.ok) throw new Error("Failed to fetch cart");
-        const data = await res.json();
-        setCartItems(data.items || []);
-        setTotalAmount(data.total_amount || 0);
-      } catch (err) {
-        console.error("Error fetching cart:", err);
-      }
-    };
-
+  useEffect(() => {
     fetchCart();
   }, [tableId, showCart]);
 
@@ -41,7 +41,6 @@ export default function CartSidebar({ showCart, setShowCart, tableId }) {
   // ➕➖ Update quantity
   const updateQuantity = async (itemId, newQty) => {
     if (newQty < 1) return;
-
     try {
       const res = await fetch(`${API_URL}/cart/update/`, {
         method: "PATCH",
@@ -52,7 +51,6 @@ export default function CartSidebar({ showCart, setShowCart, tableId }) {
           quantity: newQty,
         }),
       });
-
       if (!res.ok) throw new Error("Failed to update quantity");
 
       setCartItems((prev) =>
@@ -61,11 +59,12 @@ export default function CartSidebar({ showCart, setShowCart, tableId }) {
             ? {
                 ...item,
                 quantity: newQty,
-                subtotal: newQty * parseFloat(item.menu_item?.price || 0),
+                subtotal: newQty * parseFloat(item.menu_item?.price || item.custom_dish?.total_price || 0),
               }
             : item
         )
       );
+      if (onCartChange) onCartChange(cartItems.length);
     } catch (err) {
       console.error("Error updating quantity:", err);
     }
@@ -78,11 +77,14 @@ export default function CartSidebar({ showCart, setShowCart, tableId }) {
         `${API_URL}/cart/remove/${itemId}/?table_number=${tableId}`,
         { method: "DELETE" }
       );
-
       if (!res.ok && res.status !== 204)
         throw new Error("Failed to remove item");
 
-      setCartItems((prev) => prev.filter((item) => item.id !== itemId));
+      setCartItems((prev) => {
+        const updated = prev.filter((item) => item.id !== itemId);
+        if (onCartChange) onCartChange(updated.length);
+        return updated;
+      });
     } catch (err) {
       console.error("Error removing item:", err);
     }
@@ -102,6 +104,7 @@ export default function CartSidebar({ showCart, setShowCart, tableId }) {
       );
       setCartItems([]);
       setTotalAmount(0);
+      if (onCartChange) onCartChange(0);
     } catch (err) {
       console.error("Error clearing cart:", err);
     } finally {
@@ -116,11 +119,6 @@ export default function CartSidebar({ showCart, setShowCart, tableId }) {
       state: { cartItems, totalAmount },
     });
   };
-
-  // Calculate tax and subtotal
-  const subtotal = totalAmount;
-  const tax = subtotal * 0.08;
-  const total = subtotal + tax;
 
   return (
     <>
@@ -171,7 +169,6 @@ export default function CartSidebar({ showCart, setShowCart, tableId }) {
         <div className="flex-1 overflow-y-auto px-6 py-4 bg-white">
           {cartItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-8">
-              {/* Shopping Bag Icon */}
               <div className="w-28 h-28 bg-emerald-100 rounded-full flex items-center justify-center mb-6">
                 <svg
                   className="w-14 h-14 text-emerald-600"
@@ -192,16 +189,12 @@ export default function CartSidebar({ showCart, setShowCart, tableId }) {
                   />
                 </svg>
               </div>
-
-              {/* Empty Cart Text */}
               <h3 className="text-xl font-semibold text-gray-700 mb-2">
                 Your cart is empty
               </h3>
               <p className="text-gray-500 text-sm mb-6 max-w-xs">
                 Add some delicious items to get started!
               </p>
-
-              {/* Browse Menu Button */}
               <button
                 onClick={() => setShowCart(false)}
                 className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-lg shadow-lg transition-all duration-300"
@@ -217,24 +210,24 @@ export default function CartSidebar({ showCart, setShowCart, tableId }) {
                   className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
                 >
                   <div className="flex gap-3">
-                    {/* Item Image */}
-                    {item.menu_item?.image && (
-                      <img
-                        src={
-                          item.menu_item?.image?.startsWith("/media/")
+                    {/* Image */}
+                    <img
+                      src={
+                        item.menu_item
+                          ? item.menu_item?.image?.startsWith("/media/")
                             ? `${API_URL}${item.menu_item.image}`
                             : item.menu_item?.image
-                        }
-                        alt={item.menu_item?.name}
-                        className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
-                      />
-                    )}
+                          : item.custom_dish?.image_url ||
+                            "https://via.placeholder.com/80x80?text=No+Image"
+                      }
+                      alt={item.menu_item?.name || item.custom_dish?.name || "Item"}
+                      className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                    />
 
-                    {/* Item Details */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between mb-2">
                         <h3 className="font-bold text-emerald-800 text-base leading-tight">
-                          {item.menu_item?.name}
+                          {item.menu_item?.name || item.custom_dish?.name}
                         </h3>
                         <button
                           onClick={() => handleRemoveItem(item.id)}
@@ -244,24 +237,24 @@ export default function CartSidebar({ showCart, setShowCart, tableId }) {
                         </button>
                       </div>
 
-                      {/* Spice Level if available */}
-                      {item.menu_item?.spice_level !== undefined && (
-                        <div className="flex items-center gap-1 mb-3">
-                          <span className="text-xs text-gray-600">
-                            {item.menu_item.spice_level === 0
-                              ? "No Spicy"
-                              : `Spice Level: ${item.menu_item.spice_level}/3`}
-                          </span>
+                      {/* Custom Dish Base & Ingredients */}
+                      {/* {item.custom_dish && (
+                        <div className="text-gray-600 text-sm mb-2">
+                          <div>Base: {item.custom_dish.base?.name}</div>
+                          <div>
+                            Ingredients:{" "}
+                            {item.custom_dish.dish_ingredients
+                              ?.map((di) => `${di.quantity}x ${di.ingredient.name}`)
+                              .join(", ")}
+                          </div>
                         </div>
-                      )}
+                      )} */}
 
-                      {/* Quantity Controls and Price */}
+                      {/* Quantity & Subtotal */}
                       <div className="flex items-center justify-between mt-3">
                         <div className="flex items-center gap-2.5 bg-emerald-50 rounded-lg px-3 py-1.5">
                           <button
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity - 1)
-                            }
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
                             className="text-emerald-600 hover:text-emerald-700 transition-colors duration-300"
                           >
                             <Minus size={16} strokeWidth={2.5} />
@@ -270,9 +263,7 @@ export default function CartSidebar({ showCart, setShowCart, tableId }) {
                             {item.quantity}
                           </span>
                           <button
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity + 1)
-                            }
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             className="text-emerald-600 hover:text-emerald-700 transition-colors duration-300"
                           >
                             <Plus size={16} strokeWidth={2.5} />
@@ -290,10 +281,9 @@ export default function CartSidebar({ showCart, setShowCart, tableId }) {
           )}
         </div>
 
-        {/* Cart Footer */}
+        {/* Footer */}
         {cartItems.length > 0 && (
           <div className="border-t border-gray-200 px-6 py-5 bg-white">
-            {/* Only Show Final Total */}
             <div className="flex items-center justify-between mb-5">
               <span className="text-base font-bold text-gray-900">Total</span>
               <span className="text-2xl font-bold text-emerald-600">
@@ -301,7 +291,6 @@ export default function CartSidebar({ showCart, setShowCart, tableId }) {
               </span>
             </div>
 
-            {/* Checkout Button */}
             <button
               onClick={handlePlaceOrder}
               className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-lg shadow-lg transition-all duration-300"

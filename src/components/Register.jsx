@@ -81,150 +81,131 @@ export default function CreateAccount() {
         </div>
 
         {/* Right Section */}
-        <div className="w-full md:w-3/5 p-8 md:p-12 flex items-center justify-center">
-          <div className="max-w-md w-full">
-            <div className="mb-8 text-center">
-              <h1 className="text-3xl font-bold text-[#1F2937] mb-2">Create Account</h1>
-              <p className="text-gray-600">Sign up to get started.</p>
-            </div>
+        <div className="w-full md:w-3/5 p-6 md:p-8 flex items-center justify-center">
+  <div className="max-w-md w-full">
+    <div className="mb-8 text-center">
+      <h1 className="text-2xl font-bold text-[#1F2937] mb-1">Create Account</h1>
+      <p className="text-gray-600 text-sm">Sign up to get started.</p>
+    </div>
 
-            <form onSubmit={handleSubmit}>
-              {/* Name */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-[#1F2937] mb-2">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  className="w-full pl-3 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#059669] outline-none"
-                />
-              </div>
+    <form onSubmit={handleSubmit} className="space-y-2">
+      {/* Name */}
+      <div>
+        <label className="block text-sm font-medium text-[#1F2937] mb-1">Full Name</label>
+        <input
+          type="text"
+          placeholder="John Doe"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#059669] outline-none"
+        />
+      </div>
 
-              {/* Email */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-[#1F2937] mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full pl-3 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#059669] outline-none"
-                />
-              </div>
+      {/* Email */}
+      <div>
+        <label className="block text-sm font-medium text-[#1F2937] mb-1">Email</label>
+        <input
+          type="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#059669] outline-none"
+        />
+      </div>
 
-              {/* Role */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-[#1F2937] mb-2">
-                  Role
-                </label>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  required
-                  className="w-full pl-3 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#059669] outline-none"
-                >
-                  <option value="">Select your role</option>
-                  <option value="kitchen">Kitchen Staff</option>
-                  <option value="waiter">Waiter</option>
-                </select>
-              </div>
+      {/* Role */}
+      <div>
+        <label className="block text-sm font-medium text-[#1F2937] mb-1">Role</label>
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#059669] outline-none"
+        >
+          <option value="">Select your role</option>
+          <option value="kitchen">Kitchen Staff</option>
+          <option value="waiter">Waiter</option>
+        </select>
+      </div>
 
-              {/* Password */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-[#1F2937] mb-2">
-                  Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Min. 6 characters"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="w-full pl-3 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#059669] outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? "🙈" : "👁️"}
-                  </button>
-                </div>
-              </div>
-
-              {/* Confirm Password */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-[#1F2937] mb-2">
-                  Confirm Password
-                </label>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Re-enter password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  className="w-full pl-3 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#059669] outline-none"
-                />
-              </div>
-
-              {/* Terms */}
-              <div className="mb-6">
-                <label className="flex items-start text-sm text-[#1F2937]">
-                  <input
-                    type="checkbox"
-                    checked={agreeToTerms}
-                    onChange={(e) => setAgreeToTerms(e.target.checked)}
-                    className="w-4 h-4 mt-0.5 text-[#059669] border-gray-300 rounded focus:ring-2 focus:ring-[#059669]"
-                  />
-                  <span className="ml-2">
-                    I agree to the{" "}
-                    <button type="button" className="text-[#059669] hover:text-[#047857]">
-                      Terms of Service
-                    </button>{" "}
-                    and{" "}
-                    <button type="button" className="text-[#059669] hover:text-[#047857]">
-                      Privacy Policy
-                    </button>
-                  </span>
-                </label>
-              </div>
-
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-[#059669] hover:bg-[#047857] text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mb-4"
-              >
-                {loading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Creating...
-                  </>
-                ) : (
-                  "Sign Up"
-                )}
-              </button>
-            </form>
-
-            <p className="text-center text-sm text-gray-600">
-              Already have an account?{" "}
-              <button
-                onClick={handleSignIn}
-                className="text-[#059669] hover:text-[#047857] font-semibold"
-              >
-                Sign in
-              </button>
-            </p>
-          </div>
+      {/* Password */}
+      <div>
+        <label className="block text-sm font-medium text-[#1F2937] mb-1">Password</label>
+        <div className="relative">
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Min. 6 characters"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#059669] outline-none"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            {showPassword ? "🙈" : "👁️"}
+          </button>
         </div>
+      </div>
+
+      {/* Confirm Password */}
+      <div>
+        <label className="block text-sm font-medium text-[#1F2937] mb-1">Confirm Password</label>
+        <input
+          type={showPassword ? "text" : "password"}
+          placeholder="Re-enter password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#059669] outline-none"
+        />
+      </div>
+
+      {/* Terms */}
+      <div className="flex items-start text-sm text-[#1F2937]">
+        <input
+          type="checkbox"
+          checked={agreeToTerms}
+          onChange={(e) => setAgreeToTerms(e.target.checked)}
+          className="w-4 h-4 mt-1 text-[#059669] border-gray-300 rounded focus:ring-2 focus:ring-[#059669]"
+        />
+        <span className="ml-2 text-xs">
+          I agree to{" "}
+          <button type="button" className="text-[#059669] hover:text-[#047857]">Terms</button> and{" "}
+          <button type="button" className="text-[#059669] hover:text-[#047857]">Privacy Policy</button>
+        </span>
+      </div>
+
+      {/* Submit */}
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-[#059669] hover:bg-[#047857] text-white font-semibold py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+      >
+        {loading ? (
+          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        ) : (
+          "Sign Up"
+        )}
+      </button>
+    </form>
+
+    <p className="text-center text-sm text-gray-600 mt-2">
+      Already have an account?{" "}
+      <button
+        onClick={handleSignIn}
+        className="text-[#059669] hover:text-[#047857] font-semibold"
+      >
+        Sign in
+      </button>
+    </p>
+  </div>
+</div>
+
       </div>
     </div>
   );
