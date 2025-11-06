@@ -1,13 +1,6 @@
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import {
-  Check,
-  Clock,
-  ChefHat,
-  Bell,
-  Home,
-  HelpCircle,
-} from "lucide-react";
+import { Check, Clock, ChefHat, Bell, Home, HelpCircle } from "lucide-react";
 import { toast } from "react-toastify";
 import FeedbackModal from "./FeedbackModal";
 
@@ -30,6 +23,10 @@ export default function OrderTracking() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const handleClick = () => {
+    toast.info("Redirecting to assistance page...");
+    navigate("/assistance");
+  };
   // Fetch order details
   const fetchOrder = async () => {
     try {
@@ -122,7 +119,9 @@ export default function OrderTracking() {
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Status Card */}
-        <div className={`border ${getStatusColor()} rounded-2xl p-8 text-center mb-6`}>
+        <div
+          className={`border ${getStatusColor()} rounded-2xl p-8 text-center mb-6`}
+        >
           <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center mx-auto mb-4 shadow-sm">
             {statusSteps[currentStepIndex] &&
               (() => {
@@ -201,19 +200,24 @@ export default function OrderTracking() {
                   />
 
                   <div>
-                    <h4 className="text-emerald-900 font-medium">{item.name}</h4>
-                    <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
+                    <h4 className="text-emerald-900 font-medium">
+                      {item.name}
+                    </h4>
+                    <p className="text-sm text-gray-500">
+                      Quantity: {item.quantity}
+                    </p>
 
                     {/* Ingredients for custom dish */}
-                    {item.type === "custom_dish" && item.ingredients?.length > 0 && (
-                      <ul className="mt-1 text-xs text-gray-600 list-disc ml-4">
-                        {item.ingredients.map((ing, i) => (
-                          <li key={i}>
-                            {ing.name} × {ing.quantity}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    {item.type === "custom_dish" &&
+                      item.ingredients?.length > 0 && (
+                        <ul className="mt-1 text-xs text-gray-600 list-disc ml-4">
+                          {item.ingredients.map((ing, i) => (
+                            <li key={i}>
+                              {ing.name} × {ing.quantity}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
 
                     {/* Preparation time */}
                     {item.preparation_time && (
@@ -241,13 +245,12 @@ export default function OrderTracking() {
         {/* Buttons */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <button
-            onClick={() => toast.info("Waiter assistance requested!")}
+            onClick={handleClick}
             className="h-16 border border-emerald-300 rounded-xl hover:bg-emerald-50 flex items-center justify-center gap-2 text-emerald-800 font-medium transition-all duration-300"
           >
             <HelpCircle className="w-5 h-5" />
             Need Assistance?
           </button>
-
           <button
             onClick={() => setShowFeedback(true)}
             disabled={order.status !== "served"}
@@ -260,7 +263,6 @@ export default function OrderTracking() {
             <Bell className="w-5 h-5" />
             Rate Your Experience
           </button>
-
           <FeedbackModal
             orderId={order.id}
             isOpen={showFeedback}

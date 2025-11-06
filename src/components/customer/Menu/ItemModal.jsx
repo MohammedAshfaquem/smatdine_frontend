@@ -1,6 +1,7 @@
 import { X, Plus, Minus } from "lucide-react";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 export default function ItemModal({ item, tableNumber, onClose, onAddToCart }) {
   const [quantity, setQuantity] = useState(1);
@@ -12,30 +13,37 @@ export default function ItemModal({ item, tableNumber, onClose, onAddToCart }) {
   // 🟢 Fetch quantity of this item already in cart
   useEffect(() => {
     const fetchCartQuantity = async () => {
-      try {
-        const res = await axios.get(
-          `${BASE_URL}/cart/item-quantity/${tableNumber}/`,
-          { params: { menu_item_id: item.id } }
-        );
-        setCartQuantity(res.data.quantity || 0);
-      } catch (err) {
-        console.error("Failed to fetch cart quantity:", err);
+      if (!item.is_custom && tableNumber) {
+        try {
+          const res = await axios.get(
+            `${BASE_URL}/cart/item-quantity/${tableNumber}/`,
+            { params: { menu_item_id: item.id } }
+          );
+          setCartQuantity(res.data.quantity || 0);
+        } catch (err) {
+          console.error("Failed to fetch cart quantity:", err);
+        }
       }
     };
-
-    if (!item.is_custom && tableNumber) fetchCartQuantity();
+    fetchCartQuantity();
   }, [item, tableNumber]);
 
   // 🟢 Calculate stock availability
   useEffect(() => {
     if (item.stock !== null && item.stock !== undefined) {
       const available = item.stock - cartQuantity;
-      setMaxReached(available <= 0); // ✅ Now checks if no stock left
+      setMaxReached(available <= 0);
     }
   }, [cartQuantity, item.stock]);
 
   const handleAdd = async () => {
+    if (!tableNumber) {
+      toast.error("No table found. Please scan QR again.");
+      return;
+    }
+
     if (maxReached) return;
+
     try {
       await onAddToCart(item, quantity, instructions);
       onClose();
@@ -45,11 +53,9 @@ export default function ItemModal({ item, tableNumber, onClose, onAddToCart }) {
     }
   };
 
-  // 🟢 Disable "+" when stock is already 1 or when max reached
   const disablePlus =
     item.stock <= 1 || maxReached || quantity + cartQuantity >= item.stock;
 
-  // 🟢 Calculate visible available stock for display
   const availableStock =
     item.stock !== null && item.stock !== undefined
       ? Math.max(item.stock - cartQuantity, 0)
@@ -78,12 +84,10 @@ export default function ItemModal({ item, tableNumber, onClose, onAddToCart }) {
         <h2 className="text-2xl font-bold text-gray-900 mb-2">{item.name}</h2>
         <p className="text-gray-600 mb-2">{item.description}</p>
         <p className="text-emerald-600 font-bold text-xl mb-2">₹{item.price}</p>
-
         <p className="text-gray-500 text-sm mb-4">
           Available Stock: {availableStock}
         </p>
 
-        {/* Quantity Selector */}
         <div className="flex items-center justify-between mb-4">
           <span className="text-gray-700 font-medium">Quantity:</span>
           <div className="flex items-center gap-4">
@@ -111,7 +115,6 @@ export default function ItemModal({ item, tableNumber, onClose, onAddToCart }) {
           </div>
         </div>
 
-        {/* Special Instructions */}
         <textarea
           value={instructions}
           onChange={(e) => setInstructions(e.target.value)}
@@ -119,7 +122,6 @@ export default function ItemModal({ item, tableNumber, onClose, onAddToCart }) {
           className="w-full border border-gray-200 rounded-xl p-3 text-sm text-gray-700 mb-4 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
         />
 
-        {/* Add to Cart Button */}
         <button
           onClick={handleAdd}
           disabled={maxReached}

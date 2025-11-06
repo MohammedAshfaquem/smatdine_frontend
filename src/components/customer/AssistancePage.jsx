@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import { Droplets, Receipt, Brush, MessageSquare } from "lucide-react";
 import { toast } from "react-toastify";
 import ConfirmationModal from "../ConfirmationModal.jsx";
@@ -10,11 +9,17 @@ export default function AssistancePage() {
   const [generalMessage, setGeneralMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [requests, setRequests] = useState([]);
+  const [tableId, setTableId] = useState(null);
 
-  // ✅ Extract table number from URL (?table=5)
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const tableId = queryParams.get("table");
+  // ✅ Fetch table ID from localStorage
+  useEffect(() => {
+    const storedTable = localStorage.getItem("tableId");
+    if (storedTable) {
+      setTableId(storedTable);
+    } else {
+      toast.error("No table information found! Please rescan the QR.");
+    }
+  }, []);
 
   // ✅ Handle button click
   const handleActionClick = (action) => {
@@ -78,9 +83,7 @@ export default function AssistancePage() {
   const fetchRequests = async () => {
     if (!tableId) return;
     try {
-      const res = await fetch(
-        `http://127.0.0.1:8000/waiter/requests/${tableId}/`
-      );
+      const res = await fetch(`http://127.0.0.1:8000/waiter/requests/${tableId}/`);
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
       setRequests(data);
@@ -90,6 +93,7 @@ export default function AssistancePage() {
     }
   };
 
+  // ✅ Load requests periodically
   useEffect(() => {
     if (tableId) {
       fetchRequests();
@@ -124,65 +128,10 @@ export default function AssistancePage() {
 
         {/* --- Action Buttons --- */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 mb-12">
-          {/* Need Water */}
-          <button
-            onClick={() => handleActionClick("Need Water")}
-            className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-lg hover:border-emerald-300 transition-all duration-300 p-6 flex flex-col items-center justify-center group"
-          >
-            <Droplets
-              className="text-emerald-600 mb-3 group-hover:scale-110 transition-transform duration-300"
-              size={40}
-            />
-            <h3 className="font-semibold text-lg text-gray-900 mb-1">
-              Need Water
-            </h3>
-            <p className="text-sm text-gray-500">Request drinking water</p>
-          </button>
-
-          {/* Need Bill */}
-          <button
-            onClick={() => handleActionClick("Need Bill")}
-            className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-lg hover:border-emerald-300 transition-all duration-300 p-6 flex flex-col items-center justify-center group"
-          >
-            <Receipt
-              className="text-emerald-600 mb-3 group-hover:scale-110 transition-transform duration-300"
-              size={40}
-            />
-            <h3 className="font-semibold text-lg text-gray-900 mb-1">
-              Need Bill
-            </h3>
-            <p className="text-sm text-gray-500">Request your final bill</p>
-          </button>
-
-          {/* Clean Table */}
-          <button
-            onClick={() => handleActionClick("Clean Table")}
-            className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-lg hover:border-emerald-300 transition-all duration-300 p-6 flex flex-col items-center justify-center group"
-          >
-            <Brush
-              className="text-emerald-600 mb-3 group-hover:scale-110 transition-transform duration-300"
-              size={40}
-            />
-            <h3 className="font-semibold text-lg text-gray-900 mb-1">
-              Clean Table
-            </h3>
-            <p className="text-sm text-gray-500">Ask staff to clean the table</p>
-          </button>
-
-          {/* General Request */}
-          <button
-            onClick={() => handleActionClick("General Request")}
-            className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-lg hover:border-emerald-300 transition-all duration-300 p-6 flex flex-col items-center justify-center group"
-          >
-            <MessageSquare
-              className="text-emerald-600 mb-3 group-hover:scale-110 transition-transform duration-300"
-              size={40}
-            />
-            <h3 className="font-semibold text-lg text-gray-900 mb-1">
-              General Request
-            </h3>
-            <p className="text-sm text-gray-500">Send a custom request</p>
-          </button>
+          <ActionButton icon={Droplets} label="Need Water" onClick={handleActionClick} />
+          <ActionButton icon={Receipt} label="Need Bill" onClick={handleActionClick} />
+          <ActionButton icon={Brush} label="Clean Table" onClick={handleActionClick} />
+          <ActionButton icon={MessageSquare} label="General Request" onClick={handleActionClick} />
         </div>
 
         {/* --- User's Assistance Requests --- */}
@@ -194,10 +143,8 @@ export default function AssistancePage() {
           </div>
 
           {requests.length === 0 ? (
-            <div className="px-6 py-12 text-center">
-              <p className="text-gray-500">
-                You haven't made any requests yet.
-              </p>
+            <div className="px-6 py-12 text-center text-gray-500">
+              You haven't made any requests yet.
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -286,5 +233,30 @@ export default function AssistancePage() {
         type="approve"
       />
     </div>
+  );
+}
+
+/* ✅ Extracted small component for clarity */
+function ActionButton({ icon: Icon, label, onClick }) {
+  return (
+    <button
+      onClick={() => onClick(label)}
+      className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-lg hover:border-emerald-300 transition-all duration-300 p-6 flex flex-col items-center justify-center group"
+    >
+      <Icon
+        className="text-emerald-600 mb-3 group-hover:scale-110 transition-transform duration-300"
+        size={40}
+      />
+      <h3 className="font-semibold text-lg text-gray-900 mb-1">{label}</h3>
+      <p className="text-sm text-gray-500">
+        {label === "Need Water"
+          ? "Request drinking water"
+          : label === "Need Bill"
+          ? "Request your final bill"
+          : label === "Clean Table"
+          ? "Ask staff to clean the table"
+          : "Send a custom request"}
+      </p>
+    </button>
   );
 }

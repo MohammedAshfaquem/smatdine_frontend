@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { useLocation } from "react-router-dom";
+import axios from "axios";
 import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 import MenuHeader from "./Menu/MenuHeader";
 import SearchBar from "./Menu/SearchBar";
 import Filters from "./Menu/Filters";
 import CategoryTabs from "./Menu/CategoryTabs";
-import CustomDishSection from "./Menu/CustomDishSection";
 import MenuGrid from "./Menu/MenuGrid";
 import CartSidebar from "./Menu/CartSidebar";
 import ItemModal from "./Menu/ItemModal";
@@ -16,7 +14,18 @@ import ItemModal from "./Menu/ItemModal";
 export default function RestaurantMenu() {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
-  const tableNumber = parseInt(queryParams.get("table"), 10);
+
+  // ✅ Get table number from URL or localStorage
+  const urlTable = queryParams.get("table");
+  const storedTable = localStorage.getItem("tableNumber");
+  const tableNumber = urlTable || storedTable || 5; // fallback to 5
+
+  // ✅ Save table number in localStorage (once)
+  useEffect(() => {
+    if (urlTable) {
+      localStorage.setItem("tableNumber", urlTable);
+    }
+  }, [urlTable]);
 
   const [menuItems, setMenuItems] = useState([]);
   const [cartCount, setCartCount] = useState(0);
@@ -85,9 +94,7 @@ export default function RestaurantMenu() {
         special_instructions: specialInstructions || "",
       });
       toast.success(response.data.message);
-
-      // Refresh cart count from backend instead of manual increment
-      fetchCartCount();
+      fetchCartCount(); // refresh cart count from backend
     } catch {
       toast.error("Failed to add item to cart");
     }
@@ -117,8 +124,6 @@ export default function RestaurantMenu() {
             setSelectedCategory={setSelectedCategory}
           />
 
-          {/* <CustomDishSection /> */}
-
           <MenuGrid
             loading={loading}
             menuItems={menuItems}
@@ -134,20 +139,17 @@ export default function RestaurantMenu() {
         showCart={showCart}
         setShowCart={setShowCart}
         tableId={tableNumber}
-        
-        onCartChange={fetchCartCount} 
-        
+        onCartChange={fetchCartCount}
       />
 
       {selectedItem && (
-  <ItemModal
-    item={selectedItem}
-    tableNumber={tableNumber}   // ✅ add this line
-    onClose={() => setSelectedItem(null)}
-    onAddToCart={handleAddToCart}
-  />
-)}
-
+        <ItemModal
+          item={selectedItem}
+          tableNumber={tableNumber} // ✅ Pass table number from parent
+          onClose={() => setSelectedItem(null)}
+          onAddToCart={handleAddToCart}
+        />
+      )}
     </div>
   );
 }

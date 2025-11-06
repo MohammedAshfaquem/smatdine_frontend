@@ -12,7 +12,7 @@ export default function QRPage() {
   const [loading, setLoading] = useState(false);
   const [imgError, setImgError] = useState(false);
 
-  const qrUrl = `${API_URL}/media/qrcodes/qrcodes/table_${tableNumber}_qr.png`;
+  const qrUrl = `${API_URL}/media/qrcodes/table_${tableNumber}_qr.png`;
 
   const handleScan = async () => {
     setLoading(true);

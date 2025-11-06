@@ -8,13 +8,12 @@ import {
   BarChart3,
   Settings,
   Bell,
-} from "lucide-react"; // ✅ Added Bell icon for requests
+} from "lucide-react"; 
 
 export default function WaiterSidebar({ activeTab, setActiveTab }) {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // ✅ Retrieve user data from localStorage (same key as in AuthContext)
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
@@ -25,14 +24,13 @@ export default function WaiterSidebar({ activeTab, setActiveTab }) {
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "orders", label: "Orders", icon: ClipboardList },
     { id: "tables", label: "Tables", icon: Table2 },
-    { id: "requests", label: "Requests", icon: Bell }, // ✅ NEW Requests Tab
+    { id: "requests", label: "Requests", icon: Bell }, 
     // { id: "reports", label: "Reports", icon: BarChart3 },
     // { id: "settings", label: "Settings", icon: Settings },
   ];
 
   return (
     <div className="w-72 bg-[#065F46] text-white min-h-screen flex flex-col shadow-xl">
-      {/* --- Brand --- */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-emerald-800 bg-[#047857]">
         <div className="w-10 h-10 rounded-xl bg-[#059669] flex items-center justify-center text-white text-lg font-bold shadow-md">
           🍽️
@@ -43,7 +41,6 @@ export default function WaiterSidebar({ activeTab, setActiveTab }) {
         </div>
       </div>
 
-      {/* --- User Info --- */}
       <div className="flex items-center gap-3 px-6 py-4 border-b border-emerald-800 bg-[#047857]/70">
         <div className="w-10 h-10 rounded-full bg-emerald-900 text-[#FACC15] flex items-center justify-center font-semibold">
           {user?.name?.charAt(0)?.toUpperCase() || "U"}
@@ -56,7 +53,6 @@ export default function WaiterSidebar({ activeTab, setActiveTab }) {
         </div>
       </div>
 
-      {/* --- Menu Items --- */}
       <nav className="flex-1 mt-3 px-2">
         {menuItems.map((item) => {
           const Icon = item.icon;
@@ -82,7 +78,6 @@ export default function WaiterSidebar({ activeTab, setActiveTab }) {
         })}
       </nav>
 
-      {/* --- Footer --- */}
       <div className="px-6 py-4 border-t border-emerald-800 bg-[#047857]/70 text-center text-xs text-emerald-200">
         <span className="font-medium text-white">SmartDine POS</span> v1.0
       </div>

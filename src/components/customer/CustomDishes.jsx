@@ -2,17 +2,17 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Plus, Star, Sparkles, ChefHat } from "lucide-react";
 import axios from "axios";
-import ItemModal from "./Menu/ItemModal";
 import CustomDishModal from "./CustomDishModal";
 
 export default function CustomDishes() {
   const [popularCreations, setPopularCreations] = useState([]);
-  const [selectedItem, setSelectedItem] = useState(null); // ✅ modal state
+  const [selectedItem, setSelectedItem] = useState(null);
   const [cart, setCart] = useState([]);
   const navigate = useNavigate();
   const { tableId } = useParams();
   const location = useLocation();
 
+  // ✅ Determine active table
   const queryParams = new URLSearchParams(location.search);
   const tableFromQuery = queryParams.get("table");
   const activeTableId =
@@ -30,7 +30,7 @@ export default function CustomDishes() {
     navigate(`/step1/${activeTableId}`, { state: { tableId: activeTableId } });
   };
 
-  // Fetch popular dishes
+  // Fetch popular custom dishes
   useEffect(() => {
     const fetchPopularDishes = async () => {
       try {
@@ -46,18 +46,18 @@ export default function CustomDishes() {
     fetchPopularDishes();
   }, []);
 
-  // Add to cart function
-  const handleAddToCart = (item, quantity, instructions) => {
-    const exists = cart.findIndex((i) => i.id === item.id);
-    if (exists > -1) {
+  // Add to cart handler
+  const handleAddToCart = (item, quantity, instructions, ingredients) => {
+    const existsIndex = cart.findIndex((i) => i.id === item.id);
+    if (existsIndex > -1) {
       const newCart = [...cart];
-      newCart[exists].quantity += quantity;
-      newCart[exists].instructions = instructions;
+      newCart[existsIndex].quantity += quantity;
+      newCart[existsIndex].instructions = instructions;
       setCart(newCart);
     } else {
-      setCart([...cart, { ...item, quantity, instructions }]);
+      setCart([...cart, { ...item, quantity, instructions, selectedIngredients: ingredients }]);
     }
-    setSelectedItem(null); // close modal
+    setSelectedItem(null);
   };
 
   return (
@@ -125,7 +125,7 @@ export default function CustomDishes() {
             {popularCreations.map((item) => (
               <div
                 key={item.id}
-                onClick={() => setSelectedItem(item)} // ✅ open modal
+                onClick={() => setSelectedItem(item)}
                 className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl cursor-pointer border border-gray-200"
               >
                 <div className="relative h-56">
@@ -156,19 +156,14 @@ export default function CustomDishes() {
         </div>
       </div>
 
-      {/* ✅ Modal */}
-     {selectedItem && (
-  <CustomDishModal
-    dish={selectedItem}
-    onClose={() => setSelectedItem(null)}
-    onAddToCart={(dish, quantity, instructions, ingredients) => {
-      const cartItem = { ...dish, quantity, instructions, selectedIngredients: ingredients };
-      setCart((prev) => [...prev, cartItem]);
-      setSelectedItem(null);
-    }}
-  />
-)}
-
+      {/* ✅ Custom Dish Modal */}
+      {selectedItem && (
+        <CustomDishModal
+          dish={selectedItem}
+          onClose={() => setSelectedItem(null)}
+          onAddToCart={handleAddToCart}
+        />
+      )}
     </div>
   );
 }
