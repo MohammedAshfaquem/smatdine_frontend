@@ -16,7 +16,6 @@ export default function RequestsTab() {
   const { user, logout } = useContext(AuthContext);
   const { setPendingCount } = useContext(PendingCountContext);
 
-  // ✅ Fetch pending requests on load
   useEffect(() => {
     const token =
       sessionStorage.getItem("access") || localStorage.getItem("access");
@@ -27,7 +26,6 @@ export default function RequestsTab() {
     }
   }, []);
 
-  // ✅ Fetch pending users
   const fetchPendingRequests = async (token) => {
     try {
       setLoading(true);
@@ -59,7 +57,6 @@ export default function RequestsTab() {
     }
   };
 
-  // ✅ Approve user
   const approveUser = async (id) => {
     const token =
       sessionStorage.getItem("access") || localStorage.getItem("access");
@@ -202,7 +199,6 @@ export default function RequestsTab() {
         )}
       </div>
 
-      {/* ✅ Confirmation modal */}
       <ConfirmationModal
         isOpen={showModal}
         title="Approve User?"

@@ -1,15 +1,15 @@
 import { X, Plus, Minus } from "lucide-react";
 import { useState } from "react";
 import axios from "axios";
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export default function CustomDishModal({ dish, onClose, onAddToCart, fetchCartCount }) {
   const [quantity, setQuantity] = useState(1);
   const [instructions, setInstructions] = useState("");
 
-  const BASE_URL = "http://127.0.0.1:8000";
 
-  // ✅ Get table number from localStorage
   const storedTable = localStorage.getItem("tableId");
   const tableNumber = storedTable ? parseInt(storedTable, 10) : null;
 
@@ -28,7 +28,7 @@ export default function CustomDishModal({ dish, onClose, onAddToCart, fetchCartC
         is_custom: true,
       };
 
-      const response = await axios.post(`${BASE_URL}/cart/add/`, payload);
+      const response = await axios.post(`${API_URL}/cart/add/`, payload);
 
       toast.success(response.data.message || "Added to cart");
 
@@ -45,7 +45,6 @@ export default function CustomDishModal({ dish, onClose, onAddToCart, fetchCartC
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex justify-center items-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-md p-6 relative shadow-lg overflow-y-auto max-h-[90vh]">
-        {/* Close */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"

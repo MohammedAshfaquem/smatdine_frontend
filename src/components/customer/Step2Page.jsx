@@ -11,23 +11,23 @@ import {
 } from "lucide-react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import axios from "axios";
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
 
 export default function Step2Page() {
   const [ingredients, setIngredients] = useState([]);
   const [selectedIngredients, setSelectedIngredients] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
-  const { tableId } = useParams(); // ✅ fetch tableId from URL
+  const { tableId } = useParams();
 
-  // ✅ Base data from Step 1
   const base = location.state?.base || { name: "Custom Base", price: 0 };
   const basePrice = parseFloat(base.price || 0);
 
-  // ✅ Fetch ingredients from API
   useEffect(() => {
     const fetchIngredients = async () => {
       try {
-        const res = await axios.get("http://localhost:8000/custom-ingredients/");
+        const res = await axios.get(`${API_URL}/custom-ingredients/`);
         setIngredients(res.data);
       } catch (error) {
         console.error("Error fetching ingredients:", error);
@@ -36,7 +36,6 @@ export default function Step2Page() {
     fetchIngredients();
   }, []);
 
-  // ✅ Category order & emoji mapping
   const categoryOrder = [
     { id: "fruit", name: "Fruits", emoji: "🍓" },
     { id: "green", name: "Greens", emoji: "🥬" },
@@ -51,7 +50,6 @@ export default function Step2Page() {
     items: ingredients.filter((item) => item.category === cat.id),
   }));
 
-  // ✅ Price Calculation
   const ingredientsTotal = selectedIngredients.reduce(
     (sum, ing) => sum + parseFloat(ing.price || 0) * ing.quantity,
     0
@@ -59,7 +57,6 @@ export default function Step2Page() {
   const totalPrice = basePrice + ingredientsTotal;
   const progress = (2 / 3) * 100;
 
-  // ✅ Add, Increase, Decrease, Remove functions
   const handleAdd = (item) => {
     setSelectedIngredients([...selectedIngredients, { ...item, quantity: 1 }]);
   };

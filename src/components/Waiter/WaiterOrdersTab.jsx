@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../../api/staff";
-import { toast } from "react-toastify";
-
+import { toast } from "react-hot-toast";
 export default function WaiterOrdersTab() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);

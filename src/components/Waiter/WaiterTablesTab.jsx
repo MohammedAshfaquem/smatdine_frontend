@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Search, AlertCircle } from "lucide-react";
-import { toast } from "react-toastify";
-import api from "../../api/staff";
+import { toast } from "react-hot-toast";import api from "../../api/staff";
 
 export default function WaiterTablesTab() {
   const [tables, setTables] = useState([]);
@@ -10,8 +9,8 @@ export default function WaiterTablesTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false); 
 
-  // ✅ Fetch all tables
   const fetchTables = async () => {
     try {
       setLoading(true);
@@ -24,7 +23,7 @@ export default function WaiterTablesTab() {
         customer_name: table.orders?.[0]?.customer_name || "Guest",
       }));
       setTables(data);
-      if (data.length > 0) setSelectedTable(data[0]);
+      if (data.length > 0 && !selectedTable) setSelectedTable(data[0]);
     } catch (err) {
       console.error("Error fetching tables:", err);
       setError(err.message || "Failed to load tables");
@@ -33,11 +32,9 @@ export default function WaiterTablesTab() {
     }
   };
 
-  // 🧮 Calculate progress (orders + requests)
   const calculateProgress = (table) => {
     const orders = table.orders || [];
     const requests = table.requests || [];
-
     const totalCount = orders.length + requests.length;
     if (totalCount === 0) return 0;
 
@@ -49,35 +46,66 @@ export default function WaiterTablesTab() {
       ["completed"].includes(r.status)
     ).length;
 
-    const completedCount = completedOrders + completedRequests;
-
-    return Math.round((completedCount / totalCount) * 100);
+    return Math.round(((completedOrders + completedRequests) / totalCount) * 100);
   };
 
-  // 💰 Calculate total bill
   const calculateBill = (table) => {
     if (!table.orders || table.orders.length === 0) return 0;
     return table.orders.reduce((sum, o) => sum + parseFloat(o.total || 0), 0);
   };
 
-  // ✅ Handle table status update
   const handleStatusChange = async (table) => {
-    const newStatus = table.status === "occupied" ? "available" : "occupied";
-
+    setActionLoading(true);
     try {
-      await api.patch(`api/tables/${table.id}/`, { status: newStatus });
-      toast.success(`Table ${table.table_number} updated to ${newStatus}`);
-      fetchTables();
+      if (table.status === "occupied") {
+        await api.post(`waiter/tables/clear/${table.table_number}/`);
+        toast.success(`Table ${table.table_number} cleared and archived.`);
+      } else {
+        await api.patch(`api/tables/${table.id}/`, { status: "occupied" });
+        toast.success(`Table ${table.table_number} marked as occupied.`);
+      }
       setConfirmDialog(null);
+      fetchTablesInBackground();
     } catch (err) {
       toast.error("Failed to update table status");
       console.error(err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const fetchTablesInBackground = async () => {
+    try {
+      const response = await api.get("api/tables/");
+      const data = response.data.map((table) => ({
+        ...table,
+        progress: calculateProgress(table),
+        bill_amount: calculateBill(table),
+        customer_name: table.orders?.[0]?.customer_name || "Guest",
+      }));
+
+      setTables((prevTables) => {
+        const hasChanged =
+          JSON.stringify(prevTables.map((t) => t.id)) !==
+            JSON.stringify(data.map((t) => t.id)) ||
+          JSON.stringify(prevTables.map((t) => t.progress)) !==
+            JSON.stringify(data.map((t) => t.progress)) ||
+          JSON.stringify(prevTables.map((t) => t.bill_amount)) !==
+            JSON.stringify(data.map((t) => t.bill_amount));
+        return hasChanged ? data : prevTables;
+      });
+
+      setSelectedTable((prev) =>
+        prev ? data.find((t) => t.id === prev.id) || prev : prev
+      );
+    } catch (err) {
+      console.error("Failed to fetch tables in background", err);
     }
   };
 
   useEffect(() => {
     fetchTables();
-    const interval = setInterval(fetchTables, 10000);
+    const interval = setInterval(() => fetchTablesInBackground(), 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -131,9 +159,7 @@ export default function WaiterTablesTab() {
       {/* Left Section */}
       <div className="flex-1 p-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Table Monitor
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Table Monitor</h1>
           <div className="flex items-center gap-6 text-sm">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-emerald-500 rounded"></div>
@@ -141,18 +167,14 @@ export default function WaiterTablesTab() {
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-gray-300 rounded"></div>
-              <span className="text-gray-600">
-                Available ({availableCount})
-              </span>
+              <span className="text-gray-600">Available ({availableCount})</span>
             </div>
           </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12">
           {tables.length === 0 ? (
-            <div className="text-center py-20 text-gray-500 text-lg">
-              No tables found.
-            </div>
+            <div className="text-center py-20 text-gray-500 text-lg">No tables found.</div>
           ) : (
             <div className="space-y-16">
               {rows.map((row, idx) => (
@@ -175,14 +197,9 @@ export default function WaiterTablesTab() {
       {/* Right Sidebar */}
       <div className="w-[360px] bg-white border-l border-gray-200 flex flex-col">
         <div className="px-5 py-5 border-b border-gray-200">
-          <h2 className="text-lg font-bold text-gray-900 mb-3">
-            Table Information
-          </h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-3">Table Information</h2>
           <div className="relative">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              size={16}
-            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input
               type="text"
               placeholder="Search customers, ID"
@@ -195,18 +212,14 @@ export default function WaiterTablesTab() {
 
         <div className="flex-1 overflow-y-auto">
           {filteredTables.length === 0 ? (
-            <div className="p-5 text-center text-gray-500 text-sm">
-              No tables found
-            </div>
+            <div className="p-5 text-center text-gray-500 text-sm">No tables found</div>
           ) : (
             filteredTables.map((table) => (
               <div
                 key={table.id}
                 onClick={() => setSelectedTable(table)}
                 className={`px-5 py-4 border-b border-gray-100 cursor-pointer transition-all ${
-                  selectedTable?.id === table.id
-                    ? "bg-emerald-50"
-                    : "bg-white hover:bg-gray-50"
+                  selectedTable?.id === table.id ? "bg-emerald-50" : "bg-white hover:bg-gray-50"
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -216,23 +229,17 @@ export default function WaiterTablesTab() {
                         ? table.customer_name
                         : "Table " + table.table_number}
                     </div>
-                    <div className="text-xs text-gray-500 mb-2">
-                      #{table.table_number}
-                    </div>
+                    <div className="text-xs text-gray-500 mb-2">#{table.table_number}</div>
 
                     {table.status === "occupied" && (
                       <div className="text-xs text-gray-600 mb-2.5 space-y-0.5">
                         <div>{table.orders?.length || 0} orders</div>
                         <div>{table.requests?.length || 0} requests</div>
-                        <div className="font-semibold">
-                          ₹{table.bill_amount || 0}
-                        </div>
+                        <div className="font-semibold">₹{table.bill_amount || 0}</div>
                       </div>
                     )}
 
-                    <div className="text-xs text-gray-500 mb-2.5 capitalize">
-                      {table.status}
-                    </div>
+                    <div className="text-xs text-gray-500 mb-2.5 capitalize">{table.status}</div>
 
                     {/* ✅ Toggle Button */}
                     <button
@@ -240,15 +247,14 @@ export default function WaiterTablesTab() {
                         e.stopPropagation();
                         setConfirmDialog(table);
                       }}
+                      disabled={actionLoading}
                       className={`w-full py-2 text-xs font-semibold rounded-full transition-colors ${
                         table.status === "occupied"
                           ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
                           : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
+                      } ${actionLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
-                      {table.status === "occupied"
-                        ? "Set Available"
-                        : "Set Occupied"}
+                      {actionLoading ? "Processing..." : table.status === "occupied" ? "Set Available" : "Set Occupied"}
                     </button>
                   </div>
 
@@ -270,12 +276,10 @@ export default function WaiterTablesTab() {
                             cy="28"
                             r="24"
                             fill="none"
-                            stroke="#10b981" // always green
+                            stroke="#10b981"
                             strokeWidth="5"
                             strokeDasharray={`${2 * Math.PI * 24}`}
-                            strokeDashoffset={`${
-                              2 * Math.PI * 24 * (1 - (table.progress || 0) / 100)
-                            }`}
+                            strokeDashoffset={`${2 * Math.PI * 24 * (1 - (table.progress || 0) / 100)}`}
                             strokeLinecap="round"
                           />
                         </svg>
@@ -296,16 +300,10 @@ export default function WaiterTablesTab() {
       {confirmDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-lg p-6 max-w-sm w-full text-center">
-            <h3 className="text-lg font-bold text-gray-900 mb-3">
-              Confirm Status Change
-            </h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-3">Confirm Status Change</h3>
             <p className="text-gray-600 mb-5">
-              Are you sure you want to set{" "}
-              <strong>Table {confirmDialog.table_number}</strong> as{" "}
-              <span className="capitalize">
-                {confirmDialog.status === "occupied" ? "available" : "occupied"}
-              </span>
-              ?
+              Are you sure you want to set <strong>Table {confirmDialog.table_number}</strong> as{" "}
+              <span className="capitalize">{confirmDialog.status === "occupied" ? "available" : "occupied"}</span>?
             </p>
             <div className="flex justify-center gap-4">
               <button
@@ -332,10 +330,7 @@ export default function WaiterTablesTab() {
 function TableLayout({ table, onSelect, selected }) {
   const seat = (extraClass = "") => (
     <div
-      className={`w-4 h-4 rounded ${getSeatStyle(
-        table.status,
-        selected
-      )} ${extraClass}`}
+      className={`w-4 h-4 rounded ${getSeatStyle(table.status, selected)} ${extraClass}`}
     />
   );
 
@@ -343,9 +338,9 @@ function TableLayout({ table, onSelect, selected }) {
     if (selected) return "bg-emerald-500 shadow-md";
     switch (status) {
       case "occupied":
-        return "bg-emerald-500 shadow-sm"; // green
+        return "bg-emerald-500 shadow-sm";
       default:
-        return "bg-gray-400"; // grey
+        return "bg-gray-400";
     }
   };
 
@@ -354,9 +349,9 @@ function TableLayout({ table, onSelect, selected }) {
       return "bg-emerald-400 border-emerald-600 ring-4 ring-emerald-200 shadow-xl";
     switch (status) {
       case "occupied":
-        return "bg-emerald-500 border-emerald-600 shadow-lg shadow-emerald-200"; // green
+        return "bg-emerald-500 border-emerald-600 shadow-lg shadow-emerald-200";
       default:
-        return "bg-gray-200 border-gray-300 shadow-md"; // grey
+        return "bg-gray-200 border-gray-300 shadow-md";
     }
   };
 
@@ -380,23 +375,19 @@ function TableLayout({ table, onSelect, selected }) {
 
       <div className="flex items-center justify-center">
         {(table.seats >= 4 || table.seats === 6) && seat("mr-2")}
-
         <div
           className={`w-28 h-24 rounded-2xl border-2 flex flex-col items-center justify-center transition-all group-hover:scale-105 ${getTableStyle(
             table.status,
             selected
           )}`}
         >
-          <span className="text-white font-bold text-xl mb-1">
-            {table.table_number}
-          </span>
+          <span className="text-white font-bold text-xl mb-1">{table.table_number}</span>
           {table.status === "occupied" && table.customer_name && (
             <span className="text-white text-xs opacity-90 font-medium px-2 text-center truncate max-w-full">
               {table.customer_name.split(" ")[0]}
             </span>
           )}
         </div>
-
         {(table.seats >= 4 || table.seats === 6) && seat("ml-2")}
       </div>
 

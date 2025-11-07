@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-
+import { toast } from "react-hot-toast";
 const API_URL = import.meta.env.VITE_API_URL
 export default function ResetPassword() {
   const { userId, token } = useParams();

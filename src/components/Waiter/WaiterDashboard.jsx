@@ -20,7 +20,6 @@ export default function WaiterDashboard() {
 
       {/* Main Content */}
       <div className="flex-1 p-6">
-        {/* ✅ Show Welcome Header on dashboard, orders, and requests */}
         {activeTab !== "tables" && (
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-semibold">
@@ -47,13 +46,8 @@ export default function WaiterDashboard() {
           </div>
         )}
 
-        {/* ✅ Orders Tab */}
         {activeTab === "orders" && <WaiterOrdersTab />}
-
-        {/* 🚫 Tables Tab — hides welcome header */}
         {activeTab === "tables" && <WaiterTablesTab />}
-
-        {/* ✅ Requests Tab */}
         {activeTab === "requests" && <WaiterRequestsTab />}
       </div>
     </div>

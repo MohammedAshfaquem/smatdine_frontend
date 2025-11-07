@@ -50,7 +50,6 @@ export default function Sidebar({ setActiveTab, activeTab }) {
           boxShadow: '4px 0 24px rgba(0, 0, 0, 0.04)',
         }}
       >
-        {/* Decorative gradient accent */}
         <div 
           className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-emerald-500 via-emerald-600 to-emerald-700"
           style={{
@@ -58,7 +57,6 @@ export default function Sidebar({ setActiveTab, activeTab }) {
           }}
         />
 
-        {/* Header */}
         <div className="px-6 py-6 border-b border-gray-100 flex items-center justify-between relative">
           {!isCollapsed && (
             <div className="flex items-center gap-3 group">
@@ -89,7 +87,6 @@ export default function Sidebar({ setActiveTab, activeTab }) {
           </button>
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 px-4 py-6 space-y-1.5">
           {menuItems.map((item, index) => (
             <button
@@ -104,7 +101,6 @@ export default function Sidebar({ setActiveTab, activeTab }) {
                 animationDelay: `${index * 50}ms`,
               }}
             >
-              {/* Active indicator */}
               <div 
                 className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-emerald-500 to-emerald-700 rounded-r-full transition-all duration-300 ${
                   activeTab === item.id ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'
@@ -114,7 +110,6 @@ export default function Sidebar({ setActiveTab, activeTab }) {
                 }}
               />
               
-              {/* Hover background */}
               <div 
                 className={`absolute inset-0 bg-gradient-to-r from-emerald-50 to-transparent rounded-xl transition-all duration-300 ${
                   activeTab === item.id 
@@ -123,7 +118,6 @@ export default function Sidebar({ setActiveTab, activeTab }) {
                 }`}
               />
 
-              {/* Icon container */}
               <div 
                 className={`relative z-10 w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-300 ${
                   activeTab === item.id
@@ -149,7 +143,6 @@ export default function Sidebar({ setActiveTab, activeTab }) {
                 </>
               )}
 
-              {/* Tooltip for collapsed state */}
               {isCollapsed && (
                 <div className="absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-xl">
                   {item.label}
@@ -165,7 +158,6 @@ export default function Sidebar({ setActiveTab, activeTab }) {
           ))}
         </nav>
 
-        {/* Footer */}
         <div className="px-4 py-4 border-t border-gray-100">
           <button
             onClick={() => setShowLogoutModal(true)}
@@ -178,7 +170,6 @@ export default function Sidebar({ setActiveTab, activeTab }) {
             </div>
             {!isCollapsed && <span className="text-sm font-medium">Logout</span>}
             
-            {/* Tooltip for collapsed state */}
             {isCollapsed && (
               <div className="absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-xl">
                 Logout

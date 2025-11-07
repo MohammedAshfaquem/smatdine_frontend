@@ -10,6 +10,7 @@ import {
   Info,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export default function Step1Page() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -19,7 +20,7 @@ export default function Step1Page() {
   const [error, setError] = useState(null);
 
   const navigate = useNavigate();
-  const { tableId } = useParams(); // ✅ get tableId from route param
+  const { tableId } = useParams(); 
 
   const progress = (currentStep / 3) * 100;
   const selectedBaseData = bases.find((b) => b.id === selectedBase);
@@ -28,11 +29,10 @@ export default function Step1Page() {
       ? `₹${parseFloat(selectedBaseData.price).toFixed(2)}`
       : "Free";
 
-  // ✅ Fetch bases from API
   useEffect(() => {
     const fetchBases = async () => {
       try {
-        const res = await fetch("http://localhost:8000/custom-bases/");
+        const res = await fetch(`${API_URL}/custom-bases/`);
         if (!res.ok) throw new Error("Failed to fetch base options");
         const data = await res.json();
         setBases(data);
@@ -45,7 +45,6 @@ export default function Step1Page() {
     fetchBases();
   }, []);
 
-  // ✅ Base icons
   const getBaseIcon = (name) => {
     const n = name.toLowerCase();
     if (n.includes("water")) return <Droplet size={28} />;

@@ -11,7 +11,6 @@ export default function FeedbackModal({ orderId, isOpen, onClose }) {
   const [loading, setLoading] = useState(false);
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
 
-  // 🔍 Check if feedback already exists for this order
   useEffect(() => {
     const checkFeedback = async () => {
       try {
@@ -74,7 +73,7 @@ export default function FeedbackModal({ orderId, isOpen, onClose }) {
       toast.success("🎉 Thank you for sharing your feedback!");
       setAlreadySubmitted(true);
       resetForm();
-      onClose(); // close modal
+      onClose(); 
     } catch (err) {
       console.error(err);
       toast.error("Something went wrong while submitting feedback.");

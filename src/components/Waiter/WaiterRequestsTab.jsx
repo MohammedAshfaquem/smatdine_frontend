@@ -12,8 +12,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import api from "../../api/staff";
-import { toast } from "react-toastify";
-
+import { toast } from "react-hot-toast";
 export default function WaiterRequestsTab() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);

@@ -4,7 +4,7 @@ import {
   ChevronUp,
   Droplets,
   Receipt,
-  Brush, // ✅ Replaces Broom
+  Brush, 
   Hand,
 } from "lucide-react";
 import ConfirmationModal from "../ConfirmationModal.jsx";
@@ -20,7 +20,6 @@ export default function SmartDineSidebar({ activeTab, setActiveTab }) {
   };
 
   const handleConfirm = () => {
-    // ✅ Here you can trigger backend API call or toast notification
     console.log(`${selectedAction} request sent`);
     setModalOpen(false);
   };

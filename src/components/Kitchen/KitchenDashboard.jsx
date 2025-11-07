@@ -1,7 +1,6 @@
 import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
-import { toast } from "react-toastify";
-import { Clock, Package, CheckCircle, Boxes } from "lucide-react";
+import { toast } from "react-hot-toast";import { Clock, Package, CheckCircle, Boxes } from "lucide-react";
 
 export default function KitchenDashboard() {
   const { logout, accessToken } = useContext(AuthContext);

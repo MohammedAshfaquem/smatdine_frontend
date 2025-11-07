@@ -2,8 +2,7 @@ import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginStaff } from "../api/staff";
 import { AuthContext } from "../context/AuthContext";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-hot-toast";import "react-toastify/dist/ReactToastify.css";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -36,7 +35,6 @@ const handleLogin = async (e) => {
 
     const error = err.response?.data;
 
-    // ✅ Show specific messages returned by backend
     if (error?.error) {
       const msg = error.error;
 
@@ -50,7 +48,6 @@ const handleLogin = async (e) => {
         toast.error(msg);
       }
 
-    // ✅ If backend didn’t send "error" key (fallbacks)
     } else if (error?.detail) {
       toast.error(error.detail);
     } else if (error?.non_field_errors?.length) {

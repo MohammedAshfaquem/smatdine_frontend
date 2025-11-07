@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Droplets, Receipt, Brush, MessageSquare } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
 import ConfirmationModal from "../ConfirmationModal.jsx";
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export default function AssistancePage() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -10,24 +11,21 @@ export default function AssistancePage() {
   const [loading, setLoading] = useState(false);
   const [requests, setRequests] = useState([]);
   const [tableId, setTableId] = useState(null);
+  const [fetching, setFetching] = useState(true);
 
-  // ✅ Fetch table ID from localStorage
+  const prevRequestsRef = useRef([]);
+
   useEffect(() => {
     const storedTable = localStorage.getItem("tableId");
-    if (storedTable) {
-      setTableId(storedTable);
-    } else {
-      toast.error("No table information found! Please rescan the QR.");
-    }
+    if (storedTable) setTableId(storedTable);
+    else toast.error("No table information found! Please rescan the QR.");
   }, []);
 
-  // ✅ Handle button click
   const handleActionClick = (action) => {
     setSelectedAction(action);
     setModalOpen(true);
   };
 
-  // ✅ Confirm & send waiter request
   const handleConfirm = async () => {
     if (!selectedAction || !tableId) {
       toast.error("Table ID missing!");
@@ -55,7 +53,7 @@ export default function AssistancePage() {
       bodyData.type = reqType;
 
       const response = await fetch(
-        `http://127.0.0.1:8000/waiter-request/${tableId}/`,
+        `${API_URL}/waiter-request/${tableId}/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -67,11 +65,11 @@ export default function AssistancePage() {
       if (response.ok) {
         toast.success(data.message);
         setGeneralMessage("");
-        fetchRequests();
+        await fetchRequests(); // ✅ Refresh after adding new
       } else {
         toast.error(data.error || "Request failed");
       }
-    } catch (err) {
+    } catch {
       toast.error("Network error");
     } finally {
       setModalOpen(false);
@@ -79,30 +77,48 @@ export default function AssistancePage() {
     }
   };
 
-  // ✅ Fetch all requests for this table
+  // ✅ Fetch requests and update only when data changes
   const fetchRequests = async () => {
     if (!tableId) return;
     try {
-      const res = await fetch(`http://127.0.0.1:8000/waiter/requests/${tableId}/`);
+      setFetching(true);
+      const res = await fetch(
+        `${API_URL}/waiter/requests/${tableId}/`
+      );
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
-      setRequests(data);
+
+      const prevData = prevRequestsRef.current;
+      const changed =
+        JSON.stringify(prevData) !== JSON.stringify(data);
+
+      if (changed) {
+        setRequests(Array.isArray(data) ? data : []);
+        prevRequestsRef.current = data;
+        console.log("🔁 Requests updated (data changed)");
+      } else {
+        console.log("✅ No change detected, skip update");
+      }
     } catch (err) {
       console.error(err);
       toast.error("Failed to load your requests");
+    } finally {
+      setFetching(false);
     }
   };
 
-  // ✅ Load requests periodically
   useEffect(() => {
     if (tableId) {
       fetchRequests();
-      const interval = setInterval(fetchRequests, 7000);
-      return () => clearInterval(interval);
     }
   }, [tableId]);
 
-  // ✅ Badge style for status
+  useEffect(() => {
+    if (!tableId) return;
+    const interval = setInterval(fetchRequests, 10000); // 10 sec
+    return () => clearInterval(interval);
+  }, [tableId]);
+
   const getStatusBadge = (status) => {
     switch (status) {
       case "pending":
@@ -126,15 +142,29 @@ export default function AssistancePage() {
           Select an option below to notify a waiter instantly.
         </p>
 
-        {/* --- Action Buttons --- */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 mb-12">
-          <ActionButton icon={Droplets} label="Need Water" onClick={handleActionClick} />
-          <ActionButton icon={Receipt} label="Need Bill" onClick={handleActionClick} />
-          <ActionButton icon={Brush} label="Clean Table" onClick={handleActionClick} />
-          <ActionButton icon={MessageSquare} label="General Request" onClick={handleActionClick} />
+          <ActionButton
+            icon={Droplets}
+            label="Need Water"
+            onClick={handleActionClick}
+          />
+          <ActionButton
+            icon={Receipt}
+            label="Need Bill"
+            onClick={handleActionClick}
+          />
+          <ActionButton
+            icon={Brush}
+            label="Clean Table"
+            onClick={handleActionClick}
+          />
+          <ActionButton
+            icon={MessageSquare}
+            label="General Request"
+            onClick={handleActionClick}
+          />
         </div>
 
-        {/* --- User's Assistance Requests --- */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-6 py-5 border-b border-gray-200">
             <h3 className="text-xl font-bold text-gray-900">
@@ -142,7 +172,11 @@ export default function AssistancePage() {
             </h3>
           </div>
 
-          {requests.length === 0 ? (
+          {fetching ? (
+            <div className="px-6 py-12 text-center text-gray-500">
+              Loading requests...
+            </div>
+          ) : requests.length === 0 ? (
             <div className="px-6 py-12 text-center text-gray-500">
               You haven't made any requests yet.
             </div>
@@ -201,7 +235,6 @@ export default function AssistancePage() {
         </div>
       </div>
 
-      {/* --- Confirmation Modal --- */}
       <ConfirmationModal
         isOpen={modalOpen}
         title="Confirm Assistance"
@@ -236,7 +269,6 @@ export default function AssistancePage() {
   );
 }
 
-/* ✅ Extracted small component for clarity */
 function ActionButton({ icon: Icon, label, onClick }) {
   return (
     <button

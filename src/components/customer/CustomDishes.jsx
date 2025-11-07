@@ -3,6 +3,8 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Plus, Star, Sparkles, ChefHat } from "lucide-react";
 import axios from "axios";
 import CustomDishModal from "./CustomDishModal";
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
 
 export default function CustomDishes() {
   const [popularCreations, setPopularCreations] = useState([]);
@@ -12,7 +14,6 @@ export default function CustomDishes() {
   const { tableId } = useParams();
   const location = useLocation();
 
-  // ✅ Determine active table
   const queryParams = new URLSearchParams(location.search);
   const tableFromQuery = queryParams.get("table");
   const activeTableId =
@@ -30,11 +31,10 @@ export default function CustomDishes() {
     navigate(`/step1/${activeTableId}`, { state: { tableId: activeTableId } });
   };
 
-  // Fetch popular custom dishes
   useEffect(() => {
     const fetchPopularDishes = async () => {
       try {
-        const res = await axios.get(`http://localhost:8000/custom-dishes/`);
+        const res = await axios.get(`${API_URL}/custom-dishes/`);
         const top3 = res.data.data
           .sort((a, b) => b.sold_count - a.sold_count)
           .slice(0, 3);
@@ -46,7 +46,6 @@ export default function CustomDishes() {
     fetchPopularDishes();
   }, []);
 
-  // Add to cart handler
   const handleAddToCart = (item, quantity, instructions, ingredients) => {
     const existsIndex = cart.findIndex((i) => i.id === item.id);
     if (existsIndex > -1) {

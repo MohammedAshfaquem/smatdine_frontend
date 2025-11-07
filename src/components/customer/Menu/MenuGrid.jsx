@@ -8,7 +8,6 @@ export default function MenuGrid({
   onSelectItem,
   BASE_URL,
 }) {
-  // 🔥 Helper: Render spice icons or "No spice"
   const renderSpiceIcons = (level) => {
     if (!level || level === 0)
       return (
@@ -20,13 +19,11 @@ export default function MenuGrid({
     ));
   };
 
-  // 🔍 Filter logic
   const filteredItems = menuItems.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // Fix: match spice level correctly
     const matchesSpice =
       selectedSpice === "All Spice" ||
       (selectedSpice === "Mild" && item.spice_level === 1) ||
@@ -36,7 +33,6 @@ export default function MenuGrid({
     return matchesSearch && matchesSpice;
   });
 
-  // ⏳ Loading state
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -45,7 +41,6 @@ export default function MenuGrid({
     );
   }
 
-  // 🚫 Empty state
   if (filteredItems.length === 0) {
     return (
       <div className="text-center py-16">
@@ -81,7 +76,6 @@ export default function MenuGrid({
             />
 
             {/* ✅ Availability Badge */}
-            {/* ✅ Availability Badge with stock check */}
             <div className="absolute top-3 right-3">
               {item.stock > 0 ? (
                 <div className="px-3 py-1 bg-emerald-600 text-white text-xs font-semibold rounded-lg shadow-md">

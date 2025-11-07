@@ -22,6 +22,7 @@ import Step1Page from "./components/customer/Step1Page";
 import Step2Page from "./components/customer/Step2Page";
 import Step3Page from "./components/customer/Step3Page";
 import AssistancePage from "./components/customer/AssistancePage";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   return (
@@ -89,6 +90,19 @@ function App() {
       </Routes>
 
       <ToastContainer position="top-right" autoClose={3000} />
+       <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            fontSize: "16px",
+            padding: "12px 24px",
+            borderRadius: "12px",
+            background: "#059669", 
+            color: "#fff",
+          },
+        }}
+      />
     </>
   );
 }

@@ -1,10 +1,8 @@
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../context/AuthContext";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-hot-toast";import "react-toastify/dist/ReactToastify.css";
 import ConfirmationModal from "../ConfirmationModal.jsx";
 
-// ✅ Use API base from .env
 const API_URL = import.meta.env.VITE_API_URL
 
 export default function StaffManagement() {
@@ -19,7 +17,6 @@ export default function StaffManagement() {
     fetchStaffs();
   }, []);
 
-  // ✅ Fetch all staff
   const fetchStaffs = async () => {
     try {
       const res = await fetch(`${API_URL}/api/admin/staffs/`, {
@@ -40,7 +37,6 @@ export default function StaffManagement() {
     }
   };
 
-  // ✅ Handle block / unblock / delete
   const handleAction = async (id, action) => {
     try {
       const res = await fetch(`${API_URL}/api/admin/staffs/${id}/action/`, {
@@ -154,7 +150,6 @@ export default function StaffManagement() {
         </table>
       </div>
 
-      {/* ✅ Confirmation Modal */}
       <ConfirmationModal
         isOpen={showModal}
         title={

@@ -25,8 +25,7 @@ export default function WaiterSidebar({ activeTab, setActiveTab }) {
     { id: "orders", label: "Orders", icon: ClipboardList },
     { id: "tables", label: "Tables", icon: Table2 },
     { id: "requests", label: "Requests", icon: Bell }, 
-    // { id: "reports", label: "Reports", icon: BarChart3 },
-    // { id: "settings", label: "Settings", icon: Settings },
+
   ];
 
   return (

@@ -1,22 +1,23 @@
 import { X, Plus, Minus } from "lucide-react";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
 
 export default function ItemModal({ item, tableNumber, onClose, onAddToCart }) {
   const [quantity, setQuantity] = useState(1);
   const [instructions, setInstructions] = useState("");
   const [cartQuantity, setCartQuantity] = useState(0);
   const [maxReached, setMaxReached] = useState(false);
-  const BASE_URL = "http://127.0.0.1:8000";
 
-  // 🟢 Fetch quantity of this item already in cart
   useEffect(() => {
     const fetchCartQuantity = async () => {
       if (!item.is_custom && tableNumber) {
         try {
           const res = await axios.get(
-            `${BASE_URL}/cart/item-quantity/${tableNumber}/`,
+            `${API_URL}/cart/item-quantity/${tableNumber}/`,
             { params: { menu_item_id: item.id } }
           );
           setCartQuantity(res.data.quantity || 0);
@@ -28,7 +29,6 @@ export default function ItemModal({ item, tableNumber, onClose, onAddToCart }) {
     fetchCartQuantity();
   }, [item, tableNumber]);
 
-  // 🟢 Calculate stock availability
   useEffect(() => {
     if (item.stock !== null && item.stock !== undefined) {
       const available = item.stock - cartQuantity;
@@ -74,7 +74,7 @@ export default function ItemModal({ item, tableNumber, onClose, onAddToCart }) {
         <img
           src={
             item.image
-              ? `${BASE_URL}${item.image}`
+              ? `${API_URL}${item.image}`
               : "https://via.placeholder.com/400x250"
           }
           alt={item.name}

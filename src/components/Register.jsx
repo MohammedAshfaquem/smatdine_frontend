@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { registerStaff } from "../api/staff";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-
+import { toast } from "react-hot-toast";
 export default function CreateAccount() {
   const navigate = useNavigate();
   const [name, setName] = useState("");

@@ -10,7 +10,6 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
   const [clearing, setClearing] = useState(false);
   const navigate = useNavigate();
 
-  // 🛒 Fetch cart
   const fetchCart = async () => {
     if (!tableId) return;
     try {
@@ -19,7 +18,7 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
       const data = await res.json();
       setCartItems(data.items || []);
       setTotalAmount(data.total_amount || 0);
-      if (onCartChange) onCartChange(data.items?.length || 0); // update parent badge
+      if (onCartChange) onCartChange(data.items?.length || 0);
     } catch (err) {
       console.error("Error fetching cart:", err);
     }
@@ -29,7 +28,6 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
     fetchCart();
   }, [tableId, showCart]);
 
-  // 🧮 Recalculate total
   useEffect(() => {
     const newTotal = cartItems.reduce(
       (sum, item) => sum + parseFloat(item.subtotal || 0),
@@ -38,7 +36,6 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
     setTotalAmount(newTotal);
   }, [cartItems]);
 
-  // ➕➖ Update quantity
   const updateQuantity = async (itemId, newQty) => {
     if (newQty < 1) return;
     try {
@@ -70,7 +67,6 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
     }
   };
 
-  // ❌ Remove single item
   const handleRemoveItem = async (itemId) => {
     try {
       const res = await fetch(
@@ -90,7 +86,6 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
     }
   };
 
-  // 🧹 Clear all items
   const handleClearCart = async () => {
     if (cartItems.length === 0) return;
     setClearing(true);
@@ -112,7 +107,6 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
     }
   };
 
-  // 🚀 Go to Review Page
   const handlePlaceOrder = () => {
     setShowCart(false);
     navigate(`/review-order/${tableId}`, {
@@ -122,7 +116,6 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
 
   return (
     <>
-      {/* Overlay */}
       {showCart && (
         <div
           className="fixed inset-0 bg-black/30 z-40"
@@ -130,13 +123,11 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
         />
       )}
 
-      {/* Sidebar */}
       <div
         className={`fixed top-0 right-0 w-full max-w-md h-full bg-gray-50 shadow-2xl transform transition-transform duration-300 z-50 flex flex-col ${
           showCart ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 bg-white">
           <h2 className="text-xl font-bold text-emerald-800">Your Cart</h2>
           <div className="flex items-center gap-3">
@@ -156,7 +147,6 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
           </div>
         </div>
 
-        {/* Item Count Badge */}
         {cartItems.length > 0 && (
           <div className="px-6 py-4 bg-white border-b border-gray-100">
             <div className="inline-block px-3 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg">
@@ -165,7 +155,6 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
           </div>
         )}
 
-        {/* Cart Items */}
         <div className="flex-1 overflow-y-auto px-6 py-4 bg-white">
           {cartItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-8">
@@ -210,7 +199,6 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
                   className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
                 >
                   <div className="flex gap-3">
-                    {/* Image */}
                     <img
                       src={
                         item.menu_item
@@ -281,7 +269,6 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
           )}
         </div>
 
-        {/* Footer */}
         {cartItems.length > 0 && (
           <div className="border-t border-gray-200 px-6 py-5 bg-white">
             <div className="flex items-center justify-between mb-5">

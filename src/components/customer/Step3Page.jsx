@@ -11,14 +11,15 @@ import {
 } from "lucide-react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import axios from "axios";
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
 
 export default function Step3Page() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { tableId } = useParams(); // from URL
+  const { tableId } = useParams(); 
 
-  // ✅ Data from Step 2
   const { base, selectedIngredients, totalPrice } = location.state || {
     base: null,
     selectedIngredients: [],
@@ -29,11 +30,9 @@ export default function Step3Page() {
   const [specialInstructions, setSpecialInstructions] = useState("");
   const [saveForFuture, setSaveForFuture] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [dishImageUrl, setDishImageUrl] = useState(""); // New state for image
+  const [dishImageUrl, setDishImageUrl] = useState(""); 
 
-  // ✅ API URL
-  const API_URL = "http://localhost:8000";
-
+  
   const handleCreateOrder = async () => {
     if (!dishName.trim()) {
       toast.error("Please name your dish before proceeding.");
@@ -58,7 +57,6 @@ export default function Step3Page() {
         payload
       );
 
-      // Save the returned image URL
       setDishImageUrl(res.data.image_url);
 
       toast.success("Custom dish created and added to cart!");

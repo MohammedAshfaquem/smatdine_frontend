@@ -2,7 +2,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL; // example: http://localhost:8000
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export default function QRPage() {
   const navigate = useNavigate();
@@ -17,11 +17,9 @@ export default function QRPage() {
   const handleScan = async () => {
     setLoading(true);
     try {
-      // ✅ Mark table as occupied in backend
       await axios.patch(`${API_URL}/tables/${tableNumber}/occupy/`);
       console.log(`✅ Table ${tableNumber} marked as occupied`);
 
-      // ✅ Redirect to customer dashboard
       setTimeout(() => {
         navigate(`/customer/dashboard?table=${tableNumber}`);
       }, 800);

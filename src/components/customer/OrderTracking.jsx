@@ -1,7 +1,7 @@
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Check, Clock, ChefHat, Bell, Home, HelpCircle } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
 import FeedbackModal from "./FeedbackModal";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
@@ -24,10 +24,10 @@ export default function OrderTracking() {
   const [loading, setLoading] = useState(true);
 
   const handleClick = () => {
-    toast.info("Redirecting to assistance page...");
-    navigate("/assistance");
+    toast.success("Redirecting to assistance page...");
+    navigate(`/customer/dashboard?tab=assistance`);
   };
-  // Fetch order details
+
   const fetchOrder = async () => {
     try {
       const res = await fetch(`${API_URL}/order/${orderId}/`);
@@ -42,14 +42,12 @@ export default function OrderTracking() {
     }
   };
 
-  // Auto-refresh every 10 seconds
   useEffect(() => {
     fetchOrder();
     const interval = setInterval(fetchOrder, 10000);
     return () => clearInterval(interval);
   }, [orderId]);
 
-  // Progress animation
   const currentStepIndex = statusSteps.findIndex(
     (step) => step.key === order?.status
   );

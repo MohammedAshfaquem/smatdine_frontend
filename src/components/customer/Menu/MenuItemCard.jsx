@@ -1,7 +1,6 @@
 import { Flame } from "lucide-react";
 
 export default function MenuItemCard({ item, openModal, BASE_URL }) {
-  // 🔥 Render spice icons or 'No spice' label
   const getSpiceIcons = (level) => {
     if (!level || level === 0)
       return <span className="text-xs text-gray-500 font-medium">No spice</span>;
@@ -38,7 +37,6 @@ export default function MenuItemCard({ item, openModal, BASE_URL }) {
 
       {/* 🧾 Details Section */}
       <div className="p-6">
-        {/* Name + Price (same line) */}
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-lg font-bold text-gray-900 truncate">
             {item.name}

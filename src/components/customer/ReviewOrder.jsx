@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "react-toastify";
-import { ArrowLeft, MapPin, Check, Lightbulb } from "lucide-react";
+import { toast } from "react-hot-toast";import { ArrowLeft, MapPin, Check, Lightbulb } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
@@ -12,7 +11,6 @@ export default function ReviewOrder() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Fetch cart items
   useEffect(() => {
     const fetchCart = async () => {
       try {
@@ -30,7 +28,6 @@ export default function ReviewOrder() {
     fetchCart();
   }, [tableId]);
 
-  // Place order
   const handlePlaceOrder = async () => {
     try {
       const res = await fetch(`${API_URL}/order/place/`, {
@@ -50,8 +47,6 @@ export default function ReviewOrder() {
       toast.error(err.message || "Failed to place order. Please try again.");
     }
   };
-
-  // Calculate totals
   const subtotal = total;
   const tax = subtotal * 0.08;
   const totalAmount = subtotal + tax;
@@ -111,8 +106,6 @@ export default function ReviewOrder() {
               {cartItems.map((item) => {
                 const menuItem = item.menu_item;
                 const customDish = item.custom_dish;
-
-                // ✅ Determine image correctly for menu_item or custom_dish
                 const imageSrc = menuItem
                   ? menuItem.image?.startsWith("http")
                     ? menuItem.image

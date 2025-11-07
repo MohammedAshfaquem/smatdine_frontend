@@ -12,21 +12,24 @@ export default function CustomerDashboard() {
   const location = useLocation();
 
   useEffect(() => {
-    // ✅ 1. Try to get tableId from URL
     const queryParams = new URLSearchParams(location.search);
     const urlTable = queryParams.get("table");
+    const urlTab = queryParams.get("tab"); 
 
     if (urlTable) {
       setTableId(urlTable);
-      localStorage.setItem("tableId", urlTable); // ✅ save to localStorage
+      localStorage.setItem("tableId", urlTable);
     } else {
-      // ✅ 2. Fallback: get it from localStorage
       const storedTable = localStorage.getItem("tableId");
       if (storedTable) {
         setTableId(storedTable);
       } else {
         console.warn("⚠️ No table ID found in URL or localStorage.");
       }
+    }
+
+    if (urlTab) {
+      setActiveTab(urlTab);
     }
   }, [location.search]);
 

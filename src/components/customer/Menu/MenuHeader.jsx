@@ -2,7 +2,7 @@ import { ShoppingCart } from "lucide-react";
 
 export default function MenuHeader({ tableNumber, cartCount, onCartClick }) {
   return (
-    <div className="flex items-center justify-between mb-6">
+    <div className="flex items-center justify-between">
       <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-1">Food Menu</h1>
         <p className="text-gray-600">

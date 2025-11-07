@@ -26,7 +26,7 @@ export default function AdminDashboard() {
         {activeTab === "requests" && (
           <RequestsTab setPendingCount={setPendingCount} />
         )}
-        {activeTab === "staff" && <StaffManagement />} {/* 👈 Added here */}
+        {activeTab === "staff" && <StaffManagement />} 
         {activeTab === "reports" && (
           <div className="p-6 text-gray-800">Reports content here...</div>
         )}
