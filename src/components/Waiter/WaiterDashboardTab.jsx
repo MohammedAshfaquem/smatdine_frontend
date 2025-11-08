@@ -1,4 +1,3 @@
-// src/components/waiter/WaiterDashboardTab.jsx
 import React from "react";
 
 export default function WaiterDashboardTab({ user }) {

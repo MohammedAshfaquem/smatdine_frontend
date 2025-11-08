@@ -1,55 +1,63 @@
 import { X, Plus, Minus } from "lucide-react";
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { toast } from "react-hot-toast";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
-
-export default function ItemModal({ item, tableNumber, onClose, onAddToCart }) {
+export default function ItemModal({ item, tableNumber, onClose, onAddToCart, tables = [] }) {
   const [quantity, setQuantity] = useState(1);
   const [instructions, setInstructions] = useState("");
   const [cartQuantity, setCartQuantity] = useState(0);
   const [maxReached, setMaxReached] = useState(false);
+  const [selectedTable, setSelectedTable] = useState(tableNumber || "");
+  const [userRole, setUserRole] = useState("customer");
 
   useEffect(() => {
-    const fetchCartQuantity = async () => {
-      if (!item.is_custom && tableNumber) {
-        try {
-          const res = await axios.get(
-            `${API_URL}/cart/item-quantity/${tableNumber}/`,
-            { params: { menu_item_id: item.id } }
-          );
-          setCartQuantity(res.data.quantity || 0);
-        } catch (err) {
-          console.error("Failed to fetch cart quantity:", err);
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (
+          user.email?.includes("waiter") ||
+          user.email?.includes("admin") ||
+          user.email?.includes("kitchen")
+        ) {
+          setUserRole("waiter");
         }
+      } catch (err) {
+        console.error("Failed to parse user:", err);
       }
-    };
-    fetchCartQuantity();
-  }, [item, tableNumber]);
+    }
+  }, []);
 
   useEffect(() => {
-    if (item.stock !== null && item.stock !== undefined) {
+    if (item.stock != null) {
       const available = item.stock - cartQuantity;
       setMaxReached(available <= 0);
     }
   }, [cartQuantity, item.stock]);
 
   const handleAdd = async () => {
-    if (!tableNumber) {
-      toast.error("No table found. Please scan QR again.");
+    const tableToUse = selectedTable;
+    console.log("ItemModal: handleAdd with:", { item, quantity, instructions, tableToUse });
+
+    if (!tableToUse) {
+      toast.error("Please select a table first.");
       return;
     }
 
-    if (maxReached) return;
+    if (maxReached) {
+      toast.error("Maximum stock reached.");
+      return;
+    }
 
     try {
-      await onAddToCart(item, quantity, instructions);
+      await onAddToCart(item, quantity, instructions, tableToUse);
       onClose();
     } catch (err) {
-      console.error("Add to cart failed:", err);
-      toast.error("Cannot add more of this item — stock limit reached!");
+      console.error("ItemModal: Could not add to cart:", err.response?.data || err.message);
+      const errorMsg = err.response?.data?.error || err.response?.data?.detail || "Could not add this item.";
+      toast.error(errorMsg);
     }
   };
 
@@ -57,9 +65,7 @@ export default function ItemModal({ item, tableNumber, onClose, onAddToCart }) {
     item.stock <= 1 || maxReached || quantity + cartQuantity >= item.stock;
 
   const availableStock =
-    item.stock !== null && item.stock !== undefined
-      ? Math.max(item.stock - cartQuantity, 0)
-      : "∞";
+    item.stock != null ? Math.max(item.stock - cartQuantity, 0) : "∞";
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex justify-center items-center p-4">
@@ -72,11 +78,7 @@ export default function ItemModal({ item, tableNumber, onClose, onAddToCart }) {
         </button>
 
         <img
-          src={
-            item.image
-              ? `${API_URL}${item.image}`
-              : "https://via.placeholder.com/400x250"
-          }
+          src={item.image ? `${API_URL}${item.image}` : "https://via.placeholder.com/400x250"}
           alt={item.name}
           className="w-full h-48 object-cover rounded-xl mb-4"
         />
@@ -84,9 +86,7 @@ export default function ItemModal({ item, tableNumber, onClose, onAddToCart }) {
         <h2 className="text-2xl font-bold text-gray-900 mb-2">{item.name}</h2>
         <p className="text-gray-600 mb-2">{item.description}</p>
         <p className="text-emerald-600 font-bold text-xl mb-2">₹{item.price}</p>
-        <p className="text-gray-500 text-sm mb-4">
-          Available Stock: {availableStock}
-        </p>
+        <p className="text-gray-500 text-sm mb-4">Available Stock: {availableStock}</p>
 
         <div className="flex items-center justify-between mb-4">
           <span className="text-gray-700 font-medium">Quantity:</span>
@@ -100,20 +100,33 @@ export default function ItemModal({ item, tableNumber, onClose, onAddToCart }) {
             </button>
             <span className="text-lg font-semibold">{quantity}</span>
             <button
-              onClick={() =>
-                !disablePlus && setQuantity((q) => Math.min(q + 1, item.stock))
-              }
+              onClick={() => !disablePlus && setQuantity((q) => Math.min(q + 1, item.stock))}
               className={`p-2 rounded-full ${
-                disablePlus
-                  ? "bg-gray-200 cursor-not-allowed opacity-50"
-                  : "bg-gray-100 hover:bg-gray-200"
+                disablePlus ? "bg-gray-200 cursor-not-allowed opacity-50" : "bg-gray-100 hover:bg-gray-200"
               }`}
-              title={disablePlus ? "Maximum stock reached" : ""}
             >
               <Plus size={18} />
             </button>
           </div>
         </div>
+
+        {(userRole === "waiter" || userRole === "admin" || userRole === "kitchen") && (
+          <div className="mb-4">
+            <label className="block text-gray-700 font-medium mb-1">Select Table:</label>
+            <select
+              value={selectedTable}
+              onChange={(e) => setSelectedTable(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl p-2 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+            >
+              <option value="">-- Select Table --</option>
+              {tables.map((table) => (
+                <option key={table.id} value={table.table_number}>
+                  Table {table.table_number}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <textarea
           value={instructions}
@@ -126,9 +139,7 @@ export default function ItemModal({ item, tableNumber, onClose, onAddToCart }) {
           onClick={handleAdd}
           disabled={maxReached}
           className={`w-full py-3 text-white font-semibold rounded-xl transition-all duration-300 ${
-            maxReached
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-emerald-600 hover:bg-emerald-700"
+            maxReached ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-700"
           }`}
         >
           {maxReached ? "Maximum Stock Reached" : "Add to Cart"}

@@ -11,6 +11,9 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Package,
+  CheckCircle,
+  Archive,
 } from "lucide-react";
 import ConfirmationModal from "../ConfirmationModal.jsx";
 
@@ -25,9 +28,7 @@ export default function Sidebar({ setActiveTab, activeTab }) {
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
     sessionStorage.clear();
-
     logout();
-
     setShowLogoutModal(false);
     navigate("/login");
   };
@@ -35,6 +36,9 @@ export default function Sidebar({ setActiveTab, activeTab }) {
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
     { id: "requests", label: "Pending Requests", icon: <Inbox size={18} />, badge: pendingCount },
+    { id: "product", label: "Product Management", icon: <Package size={18} /> },
+    { id: "inventory", label: "Inventory Management", icon: <Archive size={18} /> },
+    { id: "completed", label: "Completed Orders", icon: <CheckCircle size={18} /> },
     { id: "staff", label: "Staff Management", icon: <Users size={18} /> },
     { id: "reports", label: "Reports", icon: <FileBarChart size={18} /> },
     { id: "settings", label: "Settings", icon: <Settings size={18} /> },
@@ -46,23 +50,18 @@ export default function Sidebar({ setActiveTab, activeTab }) {
         className={`${
           isCollapsed ? "w-20" : "w-72"
         } bg-white border-r border-gray-200 flex flex-col transition-all duration-500 ease-in-out min-h-screen relative`}
-        style={{
-          boxShadow: '4px 0 24px rgba(0, 0, 0, 0.04)',
-        }}
+        style={{ boxShadow: '4px 0 24px rgba(0, 0, 0, 0.04)' }}
       >
+        {/* Sidebar top bar */}
         <div 
           className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-emerald-500 via-emerald-600 to-emerald-700"
-          style={{
-            boxShadow: '0 0 20px rgba(16, 185, 129, 0.3)',
-          }}
+          style={{ boxShadow: '0 0 20px rgba(16, 185, 129, 0.3)' }}
         />
 
         <div className="px-6 py-6 border-b border-gray-100 flex items-center justify-between relative">
-          {!isCollapsed && (
+          {!isCollapsed ? (
             <div className="flex items-center gap-3 group">
-              <div 
-                className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 group-hover:shadow-emerald-500/30 group-hover:scale-105"
-              >
+              <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 group-hover:shadow-emerald-500/30 group-hover:scale-105">
                 <span className="text-xl font-bold text-white">SD</span>
               </div>
               <div>
@@ -70,11 +69,8 @@ export default function Sidebar({ setActiveTab, activeTab }) {
                 <p className="text-xs text-gray-500 font-medium">Admin Portal</p>
               </div>
             </div>
-          )}
-          {isCollapsed && (
-            <div 
-              className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg mx-auto"
-            >
+          ) : (
+            <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg mx-auto">
               <span className="text-xl font-bold text-white">SD</span>
             </div>
           )}
@@ -87,6 +83,7 @@ export default function Sidebar({ setActiveTab, activeTab }) {
           </button>
         </div>
 
+        {/* Sidebar menu */}
         <nav className="flex-1 px-4 py-6 space-y-1.5">
           {menuItems.map((item, index) => (
             <button
@@ -97,24 +94,18 @@ export default function Sidebar({ setActiveTab, activeTab }) {
                   ? "text-emerald-700 font-semibold"
                   : "text-gray-600 hover:text-emerald-700 font-medium"
               }`}
-              style={{
-                animationDelay: `${index * 50}ms`,
-              }}
+              style={{ animationDelay: `${index * 50}ms` }}
             >
               <div 
                 className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-emerald-500 to-emerald-700 rounded-r-full transition-all duration-300 ${
                   activeTab === item.id ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'
                 }`}
-                style={{
-                  boxShadow: activeTab === item.id ? '0 0 12px rgba(16, 185, 129, 0.4)' : 'none',
-                }}
+                style={{ boxShadow: activeTab === item.id ? '0 0 12px rgba(16, 185, 129, 0.4)' : 'none' }}
               />
-              
+
               <div 
                 className={`absolute inset-0 bg-gradient-to-r from-emerald-50 to-transparent rounded-xl transition-all duration-300 ${
-                  activeTab === item.id 
-                    ? 'opacity-100' 
-                    : 'opacity-0 group-hover:opacity-100'
+                  activeTab === item.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                 }`}
               />
 
@@ -130,13 +121,9 @@ export default function Sidebar({ setActiveTab, activeTab }) {
 
               {!isCollapsed && (
                 <>
-                  <span className="flex-1 text-left text-sm relative z-10">
-                    {item.label}
-                  </span>
+                  <span className="flex-1 text-left text-sm relative z-10">{item.label}</span>
                   {item.badge > 0 && (
-                    <span 
-                      className="relative z-10 bg-gradient-to-r from-red-500 to-rose-600 text-white text-xs px-2.5 py-1 rounded-full font-bold shadow-lg shadow-red-500/30 animate-pulse"
-                    >
+                    <span className="relative z-10 bg-gradient-to-r from-red-500 to-rose-600 text-white text-xs px-2.5 py-1 rounded-full font-bold shadow-lg shadow-red-500/30 animate-pulse">
                       {item.badge}
                     </span>
                   )}
@@ -147,9 +134,7 @@ export default function Sidebar({ setActiveTab, activeTab }) {
                 <div className="absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-xl">
                   {item.label}
                   {item.badge > 0 && (
-                    <span className="ml-2 bg-red-500 text-xs px-2 py-0.5 rounded-full font-semibold">
-                      {item.badge}
-                    </span>
+                    <span className="ml-2 bg-red-500 text-xs px-2 py-0.5 rounded-full font-semibold">{item.badge}</span>
                   )}
                   <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
                 </div>
@@ -158,6 +143,7 @@ export default function Sidebar({ setActiveTab, activeTab }) {
           ))}
         </nav>
 
+        {/* Sidebar footer */}
         <div className="px-4 py-4 border-t border-gray-100">
           <button
             onClick={() => setShowLogoutModal(true)}

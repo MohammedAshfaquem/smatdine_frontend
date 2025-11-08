@@ -23,6 +23,7 @@ import Step2Page from "./components/customer/Step2Page";
 import Step3Page from "./components/customer/Step3Page";
 import AssistancePage from "./components/customer/AssistancePage";
 import { Toaster } from "react-hot-toast";
+import Chatbot from "./components/customer/Chatbot";
 
 function App() {
   return (
@@ -83,8 +84,11 @@ function App() {
         <Route path="/custom-dishes" element={<CustomDishes />} />
         <Route path="/step1/:tableId" element={<Step1Page />} />
         <Route path="/step2/:tableId" element={<Step2Page />} />
-        <Route path="/step3/:tableId" element={<Step3Page />} />\
+        <Route path="/step3/:tableId" element={<Step3Page />} />
         <Route path="/assistance" element={<AssistancePage />} />
+        <Route path="/chatbot" element={<Chatbot />} />
+        
+
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

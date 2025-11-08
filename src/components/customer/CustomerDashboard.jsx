@@ -5,6 +5,7 @@ import RestaurantMenu from "./RestaurantMenu.jsx";
 import LiveOrders from "./LiveOrders.jsx";
 import AssistancePage from "./AssistancePage.jsx";
 import CustomDishes from "./CustomDishes.jsx";
+import Chatbot from "./Chatbot.jsx";
 
 export default function CustomerDashboard() {
   const [activeTab, setActiveTab] = useState("menu");
@@ -55,6 +56,7 @@ export default function CustomerDashboard() {
         {activeTab === "orders" && <LiveOrders tableId={tableId} />}
         {activeTab === "custom" && <CustomDishes tableId={tableId} />}
         {activeTab === "assistance" && <AssistancePage tableId={tableId} />}
+        {activeTab === "chat" && <Chatbot tableId={tableId} />} 
       </div>
     </div>
   );

@@ -74,6 +74,16 @@ export default function SmartDineSidebar({ activeTab, setActiveTab }) {
         ❓ Assistance
       </button>
 
+      {/* --- Chat Section --- */}
+      <button
+        className={`w-full text-left p-3 rounded-xl transition ${
+          activeTab === "chat" ? "bg-emerald-600" : "hover:bg-emerald-700"
+        }`}
+        onClick={() => setActiveTab("chat")}
+      >
+        💬 Chat with AI
+      </button>
+
       {/* --- Quick Tip --- */}
       <div className="mt-auto bg-emerald-900/60 rounded-xl p-3 text-sm">
         <strong className="block mb-1">💡 Quick Tip</strong>

@@ -3,12 +3,8 @@ import {
   LayoutDashboard,
   ClipboardList,
   Table2,
-  UtensilsCrossed,
-  CreditCard,
-  BarChart3,
-  Settings,
   Bell,
-} from "lucide-react"; 
+} from "lucide-react";
 
 export default function WaiterSidebar({ activeTab, setActiveTab }) {
   const [user, setUser] = useState(null);
@@ -22,14 +18,13 @@ export default function WaiterSidebar({ activeTab, setActiveTab }) {
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "orders", label: "Orders", icon: ClipboardList },
-    { id: "tables", label: "Tables", icon: Table2 },
-    { id: "requests", label: "Requests", icon: Bell }, 
-
+    { id: "orders",    label: "Orders",    icon: ClipboardList },
+    { id: "tables",    label: "Tables",    icon: Table2 },
+    { id: "requests",  label: "Requests",  icon: Bell },
   ];
 
   return (
-    <div className="w-72 bg-[#065F46] text-white min-h-screen flex flex-col shadow-xl">
+    <div className="w-72 bg-[#065F46] text-white flex flex-col shadow-xl fixed left-0 top-0 h-screen">
       <div className="flex items-center gap-3 px-6 py-5 border-b border-emerald-800 bg-[#047857]">
         <div className="w-10 h-10 rounded-xl bg-[#059669] flex items-center justify-center text-white text-lg font-bold shadow-md">
           🍽️
@@ -52,7 +47,7 @@ export default function WaiterSidebar({ activeTab, setActiveTab }) {
         </div>
       </div>
 
-      <nav className="flex-1 mt-3 px-2">
+      <nav className="flex-1 mt-3 px-2 overflow-auto">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -60,12 +55,11 @@ export default function WaiterSidebar({ activeTab, setActiveTab }) {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`relative flex items-center gap-3 w-full text-left px-5 py-3 text-sm font-medium transition rounded-lg my-1 group
-                ${
-                  isActive
-                    ? "bg-[#059669] text-white font-semibold"
-                    : "text-emerald-100 hover:bg-emerald-700/50 hover:text-white"
-                }`}
+              className={`relative flex items-center gap-3 w-full text-left px-5 py-3 text-sm font-medium transition rounded-lg my-1 group ${
+                isActive
+                  ? "bg-[#059669] text-white font-semibold"
+                  : "text-emerald-100 hover:bg-emerald-700/50 hover:text-white"
+              }`}
             >
               <Icon size={18} />
               {item.label}

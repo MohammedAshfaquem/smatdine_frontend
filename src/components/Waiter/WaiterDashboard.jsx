@@ -4,6 +4,7 @@ import WaiterSidebar from "./WaiterSidebar";
 import WaiterOrdersTab from "./WaiterOrdersTab";
 import WaiterTablesTab from "./WaiterTablesTab";
 import WaiterRequestsTab from "./WaiterRequestsTab";
+import WaiterHome from "./WaiterHome";
 
 export default function WaiterDashboard() {
   const { user, logout } = useContext(AuthContext);
@@ -12,40 +13,29 @@ export default function WaiterDashboard() {
   return (
     <div className="flex min-h-screen bg-[#F9FAFB] text-[#1F2937]">
       {/* Sidebar */}
-      <WaiterSidebar
-        waiter={{ name: user?.name, role: user?.role }}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
+      <div className="w-72 fixed left-0 top-0 h-screen">
+        <WaiterSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-6">
+      <div className="flex-1 ml-72 overflow-auto p-6">
         {activeTab !== "tables" && (
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-semibold">
-              Welcome, {user?.name || "Waiter"} 👋
-            </h1>
-            <button
-              onClick={logout}
-              className="bg-[#059669] text-white px-4 py-2 rounded-lg hover:bg-[#047857] transition"
-            >
-              Logout
-            </button>
+          <div className="sticky top-0 z-10 bg-[#F9FAFB] mb-6">
+            <div className="flex justify-between items-center py-4">
+              <h1 className="text-2xl font-semibold">
+                Welcome, {user?.name || "Waiter"} 👋
+              </h1>
+              <button
+                onClick={logout}
+                className="bg-[#059669] text-white px-4 py-2 rounded-lg hover:bg-[#047857] transition"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         )}
 
-        {/* ✅ Dashboard Content */}
-        {activeTab === "dashboard" && (
-          <div className="text-center mt-20">
-            <h2 className="text-2xl font-semibold text-[#059669]">
-              🍽️ Welcome to SmartDine Dashboard
-            </h2>
-            <p className="text-gray-600 mt-2">
-              Manage your tables, orders, and requests efficiently.
-            </p>
-          </div>
-        )}
-
+        {activeTab === "dashboard" && <WaiterHome />}
         {activeTab === "orders" && <WaiterOrdersTab />}
         {activeTab === "tables" && <WaiterTablesTab />}
         {activeTab === "requests" && <WaiterRequestsTab />}
