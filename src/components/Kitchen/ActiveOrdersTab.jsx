@@ -14,15 +14,16 @@ export default function ActiveOrders({
   accessToken,
   fetchOrders,
   logout,
+  userRole,
 }) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [timers, setTimers] = useState({});
-  const [readyOrders, setReadyOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
 
-  // ✅ Fetch ready orders
+  // ✅ Fetch orders dynamically
   useEffect(() => {
-    const fetchReadyOrders = async () => {
+    const fetchFilteredOrders = async () => {
       if (!accessToken) {
         toast.error("No access token. Please log in again.");
         logout();
@@ -30,65 +31,63 @@ export default function ActiveOrders({
       }
 
       try {
-        const res = await fetch("http://127.0.0.1:8000/waiter/orders/ready/", {
+        const params = new URLSearchParams();
+
+        // ✅ If not "all", filter today's orders by status
+        if (statusFilter && statusFilter !== "all") {
+          params.append("today", "true");
+          params.append("status", statusFilter);
+        }
+
+        const url = `http://127.0.0.1:8000/orders/filter/?${params.toString()}`;
+        const res = await fetch(url, {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
+          headers: { Authorization: `Bearer ${accessToken}` },
         });
 
-        if (res.ok) {
-          const data = await res.json();
-          setReadyOrders(data || []);
-        } else {
-          toast.error("Failed to fetch ready orders");
-        }
+        if (!res.ok) throw new Error("Failed to fetch orders");
+
+        const data = await res.json();
+        setFilteredOrders(data || []);
       } catch (err) {
         console.error(err);
-        toast.error("Error fetching ready orders");
+        toast.error("Error fetching orders");
       }
     };
 
-    if (statusFilter === "ready") fetchReadyOrders();
+    fetchFilteredOrders();
   }, [statusFilter, accessToken, logout]);
 
-  // ✅ Initialize timers for all active orders
+  // ✅ Initialize countdown timers
   useEffect(() => {
     const newTimers = {};
-    const currentOrders = statusFilter === "ready" ? readyOrders : orders;
-
-    currentOrders.forEach((order) => {
+    filteredOrders.forEach((order) => {
       if (order.created_at && order.estimated_time) {
         const createdAt = new Date(order.created_at).getTime();
-        const estimatedMs = order.estimated_time * 60 * 1000;
-        const elapsedMs = Date.now() - createdAt;
-        const remaining = Math.max(
-          0,
-          Math.floor((estimatedMs - elapsedMs) / 1000)
-        );
+        const estMs = order.estimated_time * 60 * 1000;
+        const elapsed = Date.now() - createdAt;
+        const remaining = Math.max(0, Math.floor((estMs - elapsed) / 1000));
         newTimers[order.id] = remaining;
       }
     });
-
     setTimers(newTimers);
-  }, [orders, readyOrders, statusFilter]);
+  }, [filteredOrders]);
 
-  // ✅ Countdown logic
+  // ✅ Countdown tick
   useEffect(() => {
     const interval = setInterval(() => {
       setTimers((prev) => {
         const updated = { ...prev };
-        for (const id in updated) {
-          if (updated[id] > 0) updated[id] -= 1;
-        }
+        Object.keys(updated).forEach((id) => {
+          if (updated[id] > 0) updated[id]--;
+        });
         return updated;
       });
     }, 1000);
-
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ Update order status (PATCH)
+  // ✅ Update order status
   const updateOrderStatus = async (orderId, newStatus) => {
     if (!accessToken) {
       toast.error("No access token. Please log in again.");
@@ -109,76 +108,48 @@ export default function ActiveOrders({
         }
       );
 
-      if (res.ok) {
-        toast.success(`Order marked as ${newStatus}`);
-        fetchOrders();
-        if (statusFilter === "ready") {
-          const updated = readyOrders.filter((o) => o.id !== orderId);
-          setReadyOrders(updated);
-        }
-      } else {
-        toast.error("Failed to update order status");
-      }
+      if (!res.ok) throw new Error("Failed to update status");
+
+      toast.success(`Order #${orderId} marked as ${newStatus}`);
+      fetchOrders();
     } catch (err) {
       console.error(err);
       toast.error("Error updating order status");
     }
   };
 
-  // ✅ Helper functions
+  // ✅ Helpers
   const getTimeColor = (s) =>
     s > 600 ? "text-green-600" : s > 300 ? "text-orange-500" : "text-red-600";
-
   const getProgressColor = (s) =>
     s > 600 ? "bg-green-500" : s > 300 ? "bg-orange-500" : "bg-red-500";
-
   const getTimeDisplay = (s) =>
     `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(
       2,
       "0"
     )}`;
 
-  const currentOrders = statusFilter === "ready" ? readyOrders : orders;
-
-  // ✅ Filtering
-  const filteredOrders = currentOrders.filter((order) => {
-    const matchesTab = statusFilter === "all" || order.status === statusFilter;
-    const matchesSearch =
-      String(order.id).includes(searchQuery) ||
-      String(order.table_number || "").includes(searchQuery);
-    return matchesTab && matchesSearch;
+  // ✅ Apply search filter
+  const searchedOrders = filteredOrders.filter((order) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      String(order.id).includes(q) ||
+      String(order.table_number || "").toLowerCase().includes(q)
+    );
   });
 
-  // ✅ Realistic Priority Sorting Algorithm
-  const prioritizedOrders = filteredOrders.sort((a, b) => {
+  // ✅ Prioritize display by urgency + status
+  const prioritizedOrders = searchedOrders.sort((a, b) => {
     const now = Date.now();
-
-    const getRemaining = (order) => {
-      const created = new Date(order.created_at).getTime();
-      return order.estimated_time * 60 * 1000 - (now - created);
+    const getRemaining = (o) =>
+      o.estimated_time * 60 * 1000 - (now - new Date(o.created_at).getTime());
+    const score = (o) => {
+      const remaining = getRemaining(o);
+      const base = o.status === "ready" ? 3 : o.status === "preparing" ? 2 : 1;
+      const urgency = remaining <= 0 ? 5 : remaining < 5 * 60 * 1000 ? 2 : 0;
+      return base * 10 + urgency;
     };
-
-    const statusWeight = {
-      ready: 3,
-      preparing: 2,
-      pending: 1,
-    };
-
-    const score = (order) => {
-      const remaining = getRemaining(order);
-      const weight = statusWeight[order.status] || 0;
-      let bonus = 0;
-
-      if (remaining <= 0) bonus += 5; // overdue
-      else if (remaining < 5 * 60 * 1000) bonus += 2; // less than 5 min left
-
-      // Urgency factor (less remaining time = higher urgency)
-      const urgency = Math.max(0, 3600 * 1000 - remaining) / 1000 / 60;
-
-      return weight * 10 + bonus + urgency;
-    };
-
-    return score(b) - score(a); // higher score first
+    return score(b) - score(a);
   });
 
   return (
@@ -186,7 +157,17 @@ export default function ActiveOrders({
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Active Orders</h1>
-        <p className="text-gray-600">Manage and track incoming orders</p>
+        <p className="text-gray-600">
+          Viewing{" "}
+          {statusFilter === "all" ? (
+            <span className="font-semibold">all orders</span>
+          ) : (
+            <>
+              <span className="font-semibold">today’s</span> {statusFilter}{" "}
+              orders
+            </>
+          )}
+        </p>
       </div>
 
       {/* Search + Tabs */}
@@ -204,22 +185,17 @@ export default function ActiveOrders({
           </div>
 
           <div className="flex gap-2">
-            {[
-              { id: "all", label: "All" },
-              { id: "pending", label: "Pending" },
-              { id: "preparing", label: "Preparing" },
-              { id: "ready", label: "Ready" },
-            ].map((tab) => (
+            {["all", "pending", "preparing", "ready"].map((tab) => (
               <button
-                key={tab.id}
-                onClick={() => setStatusFilter(tab.id)}
+                key={tab}
+                onClick={() => setStatusFilter(tab)}
                 className={`px-5 py-3 rounded-lg font-medium text-sm transition ${
-                  statusFilter === tab.id
+                  statusFilter === tab
                     ? "bg-gray-900 text-white"
                     : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
                 }`}
               >
-                {tab.label}
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
             ))}
           </div>
@@ -230,32 +206,21 @@ export default function ActiveOrders({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {prioritizedOrders.length > 0 ? (
           prioritizedOrders.map((order) => {
-            const remainingSec = timers[order.id] || 0;
+            const remaining = timers[order.id] || 0;
             const firstItem = order.items?.[0];
-            const imageUrl = (() => {
-              if (firstItem?.menu_item?.image) {
-                const img = firstItem.menu_item.image;
-                return img.startsWith("http")
-                  ? img
-                  : `http://127.0.0.1:8000${img}`;
-              } else if (firstItem?.custom_dish?.image_url) {
-                return firstItem.custom_dish.image_url;
-              }
-              return null;
-            })();
-
+            const imageUrl =
+              firstItem?.menu_item?.image &&
+              (firstItem.menu_item.image.startsWith("http")
+                ? firstItem.menu_item.image
+                : `http://127.0.0.1:8000${firstItem.menu_item.image}`);
             const itemName =
-              firstItem?.name ||
-              firstItem?.menu_item?.name ||
-              firstItem?.custom_dish?.name ||
-              "Item";
+              firstItem?.menu_item?.name || firstItem?.custom_dish?.name || "";
 
             return (
               <div
                 key={order.id}
                 className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition p-6"
               >
-                {/* Header */}
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
@@ -280,8 +245,7 @@ export default function ActiveOrders({
                         {order.status === "ready" && (
                           <CheckCircle className="w-3 h-3" />
                         )}
-                        {order.status.charAt(0).toUpperCase() +
-                          order.status.slice(1)}
+                        {order.status}
                       </span>
                     </div>
                     <p className="text-2xl font-bold text-gray-900">
@@ -290,15 +254,12 @@ export default function ActiveOrders({
                   </div>
                 </div>
 
-                {/* Table Info */}
-                <div className="mb-4">
-                  <p className="text-sm text-gray-700">
-                    <span className="font-semibold">
-                      Table {order.table_number}
-                    </span>{" "}
-                    • {order.items?.length || 0} items
-                  </p>
-                </div>
+                <p className="text-sm text-gray-700 mb-4">
+                  <span className="font-semibold">
+                    Table {order.table_number}
+                  </span>{" "}
+                  • {order.items?.length || 0} items
+                </p>
 
                 {/* Timer */}
                 {order.status !== "ready" && (
@@ -309,21 +270,21 @@ export default function ActiveOrders({
                       </span>
                       <span
                         className={`text-sm font-bold ${getTimeColor(
-                          remainingSec
+                          remaining
                         )}`}
                       >
-                        {getTimeDisplay(remainingSec)}
+                        {getTimeDisplay(remaining)}
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
                         className={`h-2 rounded-full transition-all ${getProgressColor(
-                          remainingSec
+                          remaining
                         )}`}
                         style={{
                           width: `${Math.max(
                             5,
-                            ((order.estimated_time * 60 - remainingSec) /
+                            ((order.estimated_time * 60 - remaining) /
                               (order.estimated_time * 60)) *
                               100
                           )}%`,
@@ -337,7 +298,7 @@ export default function ActiveOrders({
                 {firstItem && (
                   <div className="bg-gray-50 rounded-lg p-3 mb-3 border border-gray-100">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center border border-gray-200 overflow-hidden">
+                      <div className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 bg-white">
                         {imageUrl ? (
                           <img
                             src={imageUrl}
@@ -348,7 +309,7 @@ export default function ActiveOrders({
                           <ChefHat className="text-emerald-600" size={20} />
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div>
                         <p className="font-medium text-gray-900 text-sm truncate">
                           {itemName}
                         </p>
@@ -357,36 +318,29 @@ export default function ActiveOrders({
                         </p>
                       </div>
                     </div>
-                    {order.items.length > 1 && (
-                      <p className="text-xs text-emerald-700 font-medium mt-2">
-                        +{order.items.length - 1} more items
-                      </p>
-                    )}
                   </div>
                 )}
 
-                {/* Action Buttons */}
+                {/* Actions */}
                 <div className="space-y-2">
                   {order.status === "pending" && (
                     <button
                       onClick={() => updateOrderStatus(order.id, "preparing")}
-                      className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold text-sm transition flex items-center justify-center gap-2"
+                      className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2"
                     >
                       <ChevronRight className="w-4 h-4" />
                       Start Preparing
                     </button>
                   )}
-
                   {order.status === "preparing" && (
                     <button
                       onClick={() => updateOrderStatus(order.id, "ready")}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold text-sm transition flex items-center justify-center gap-2"
+                      className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2"
                     >
                       <CheckCircle className="w-4 h-4" />
                       Mark Ready
                     </button>
                   )}
-
                   {order.status === "ready" && (
                     <div className="bg-green-50 border-2 border-green-500 text-green-700 py-3 rounded-lg font-semibold text-sm text-center">
                       ✅ Ready to Serve
@@ -403,7 +357,7 @@ export default function ActiveOrders({
               No orders found
             </h3>
             <p className="text-gray-600">
-              Orders will appear here when customers place them
+              No orders placed today or matching your filter.
             </p>
           </div>
         )}
@@ -411,3 +365,4 @@ export default function ActiveOrders({
     </div>
   );
 }
+ 

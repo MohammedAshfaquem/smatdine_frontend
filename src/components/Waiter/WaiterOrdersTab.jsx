@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import api from "../../api/staff";
 import { toast } from "react-hot-toast";
+
 export default function WaiterOrdersTab() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // ✅ Fetch today's ready orders
   const fetchReadyOrders = async () => {
     try {
       setLoading(true);
-      const res = await api.get("waiter/orders/ready/");
+      const res = await api.get("orders/filter/?status=ready&today=true");
       setOrders(res.data);
     } catch (err) {
       console.error(err);
@@ -18,9 +20,10 @@ export default function WaiterOrdersTab() {
     }
   };
 
+  // ✅ Mark order as served
   const markAsServed = async (orderId) => {
     try {
-      await api.patch(`waiter/orders/${orderId}/served/`);
+      await api.patch(`orders/${orderId}/mark-served/`);
       toast.success(`Order ${orderId} marked as served`);
       setOrders((prev) => prev.filter((o) => o.id !== orderId));
     } catch (err) {
@@ -37,11 +40,11 @@ export default function WaiterOrdersTab() {
 
   return (
     <div>
-      <h2 className="text-xl font-medium mb-4">🍽️ Ready to Serve Orders</h2>
+      <h2 className="text-xl font-medium mb-4">🍽️ Ready Orders (Today)</h2>
       {loading ? (
         <p className="text-gray-500 text-center">Loading orders...</p>
       ) : orders.length === 0 ? (
-        <p className="text-gray-500 text-center">No ready orders at the moment.</p>
+        <p className="text-gray-500 text-center">No ready orders for today.</p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {orders.map((order) => (
@@ -50,7 +53,7 @@ export default function WaiterOrdersTab() {
               className="p-4 bg-white rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition"
             >
               <h2 className="text-lg font-semibold text-[#059669] mb-2">
-                Table {order.table_number}
+                Table {order.table?.number || order.table_number}
               </h2>
               <p className="text-sm text-gray-500 mb-2">
                 ETA: {order.estimated_time} min | Total: ₹{order.total}

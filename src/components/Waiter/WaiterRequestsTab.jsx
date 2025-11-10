@@ -4,15 +4,14 @@ import {
   Filter,
   Clock,
   Check,
-  User,
   Droplet,
   FileText,
   Trash2,
   HelpCircle,
-  UserPlus,
 } from "lucide-react";
 import api from "../../api/staff";
 import { toast } from "react-hot-toast";
+
 export default function WaiterRequestsTab() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -27,7 +26,7 @@ export default function WaiterRequestsTab() {
     { id: "water", name: "Need Water", icon: <Droplet size={18} className="text-blue-600" /> },
     { id: "bill", name: "Need Bill", icon: <FileText size={18} className="text-yellow-600" /> },
     { id: "clean", name: "Clean Table", icon: <Trash2 size={18} className="text-emerald-600" /> },
-    { id: "help", name: "General Help", icon: <HelpCircle size={18} className="text-purple-600" /> },
+    { id: "help", name: "General", icon: <HelpCircle size={18} className="text-purple-600" /> },
   ];
 
   const statuses = ["All Status", "pending", "in-progress", "completed"];
@@ -35,7 +34,7 @@ export default function WaiterRequestsTab() {
   const fetchRequests = async () => {
     try {
       setLoading(true);
-      const res = await api.get("waiter-requests/");
+      const res = await api.get("service-requests/");
       setRequests(res.data);
     } catch (err) {
       console.error(err);
@@ -45,18 +44,36 @@ export default function WaiterRequestsTab() {
     }
   };
 
-  const handleStatusUpdate = async (id, currentStatus) => {
+  const handleStatusUpdate = async (id, currentStatus, type) => {
     const nextStatus =
       currentStatus === "pending"
         ? "in-progress"
         : currentStatus === "in-progress"
         ? "completed"
         : null;
+
     if (!nextStatus) return;
 
     try {
+      // Keep old update URL
       await api.patch(`waiter-requests/${id}/`, { status: nextStatus });
-      toast.success(`Status updated to ${nextStatus}`);
+
+      // If it's a general help request, show special alert
+      if (type.toLowerCase().includes("help")) {
+        toast(`🆘 General Help request updated to ${nextStatus.toUpperCase()}`, {
+          icon: "⚠️",
+          style: {
+            border: "1px solid #F59E0B",
+            padding: "12px 16px",
+            background: "#FEF3C7",
+            color: "#92400E",
+            fontWeight: "600",
+          },
+        });
+      } else {
+        toast.success(`Status updated to ${nextStatus}`);
+      }
+
       fetchRequests();
     } catch (err) {
       console.error(err);
@@ -259,7 +276,7 @@ export default function WaiterRequestsTab() {
 
                   {req.status !== "completed" ? (
                     <button
-                      onClick={() => handleStatusUpdate(req.id, req.status)}
+                      onClick={() => handleStatusUpdate(req.id, req.status, req.type)}
                       className="w-full bg-[#059669] hover:bg-[#047857] text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
                     >
                       <Check size={20} strokeWidth={2.5} />
