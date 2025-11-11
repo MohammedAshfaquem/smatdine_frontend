@@ -4,13 +4,26 @@ import RequestsTab from "./RequestsTab";
 import StaffManagement from "./StaffManagement";
 import InventoryManagement from "./InventoryManagement";
 import CompletedOrderManagement from "./CompletedOrdersManagment";
+import MainPage from "./MainPage";
+import ProfessionalNavbar from "./components/navbar";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [pendingCount, setPendingCount] = useState(0);
 
+  const tabTitles = {
+    dashboard: "Dashboard",
+    requests: "Requests",
+    inventory: "Inventory Management",
+    completed: "Completed Orders",
+    staff: "Staff Management",
+    reports: "Reports",
+    settings: "Settings",
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-100">
+      {/* Sidebar */}
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -18,27 +31,29 @@ export default function AdminDashboard() {
         setPendingCount={setPendingCount}
       />
 
-      <div className="flex-1">
-        {activeTab === "dashboard" && (
-          <div className="p-6 text-gray-800">
-            <h1 className="text-2xl font-semibold mb-4">Dashboard</h1>
-            <p>Welcome to the SmartDine Admin Dashboard.</p>
-          </div>
-        )}
-        {activeTab === "requests" && (
-          <RequestsTab setPendingCount={setPendingCount} />
-        )}
-        {activeTab === "staff" && <StaffManagement />} 
-                {activeTab === "inventory" && <InventoryManagement />} 
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Sticky Navbar */}
+        <ProfessionalNavbar></ProfessionalNavbar>
 
-        {activeTab === "reports" && (
-          <div className="p-6 text-gray-800">Reports content here...</div>
-        )}
-        {activeTab === "settings" && (
-          <div className="p-6 text-gray-800">Settings page...</div>
-        )}
-        {activeTab === "completed" && <CompletedOrderManagement />} 
-        
+        {/* Tab Content */}
+        <div className="p-6 flex-1 overflow-y-auto">
+          {activeTab === "dashboard" && <MainPage></MainPage>}
+          {activeTab === "requests" && (
+            <RequestsTab setPendingCount={setPendingCount} />
+          )}
+
+          {activeTab === "inventory" && <InventoryManagement />}
+          {activeTab === "completed" && <CompletedOrderManagement />}
+
+          {activeTab === "staff" && <StaffManagement />}
+          {activeTab === "reports" && (
+            <div className="text-gray-800">Reports content here...</div>
+          )}
+          {activeTab === "settings" && (
+            <div className="text-gray-800">Settings page...</div>
+          )}
+        </div>
       </div>
     </div>
   );

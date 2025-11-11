@@ -24,6 +24,7 @@ import Step3Page from "./components/customer/Step3Page";
 import AssistancePage from "./components/customer/AssistancePage";
 import { Toaster } from "react-hot-toast";
 import Chatbot from "./components/customer/Chatbot";
+import AddProductPage from "./components/Admin/AddProductPage";
 
 function App() {
   return (
@@ -87,14 +88,13 @@ function App() {
         <Route path="/step3/:tableId" element={<Step3Page />} />
         <Route path="/assistance" element={<AssistancePage />} />
         <Route path="/chatbot" element={<Chatbot />} />
-        
-
+        <Route path="/add-product" element={<AddProductPage />} />
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
 
       <ToastContainer position="top-right" autoClose={3000} />
-       <Toaster
+      <Toaster
         position="top-center"
         toastOptions={{
           duration: 3000,
@@ -102,7 +102,7 @@ function App() {
             fontSize: "16px",
             padding: "12px 24px",
             borderRadius: "12px",
-            background: "#059669", 
+            background: "#059669",
             color: "#fff",
           },
         }}

@@ -36,8 +36,7 @@ export default function Sidebar({ setActiveTab, activeTab }) {
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
     { id: "requests", label: "Pending Requests", icon: <Inbox size={18} />, badge: pendingCount },
-    { id: "product", label: "Product Management", icon: <Package size={18} /> },
-    { id: "inventory", label: "Inventory Management", icon: <Archive size={18} /> },
+    { id: "inventory", label: "Inventory Management", icon: <Package size={18} /> },
     { id: "completed", label: "Completed Orders", icon: <CheckCircle size={18} /> },
     { id: "staff", label: "Staff Management", icon: <Users size={18} /> },
     { id: "reports", label: "Reports", icon: <FileBarChart size={18} /> },
