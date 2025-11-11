@@ -69,10 +69,10 @@ function KitchenSidebar({ activeTab, setActiveTab, onLogout, user }) {
 
       {/* Settings & Logout */}
       <div className="px-2 pb-2">
-        <button className="flex items-center gap-3 w-full text-left px-5 py-3 text-sm font-medium text-emerald-100 hover:bg-emerald-700/50 hover:text-white transition rounded-lg">
+        {/* <button className="flex items-center gap-3 w-full text-left px-5 py-3 text-sm font-medium text-emerald-100 hover:bg-emerald-700/50 hover:text-white transition rounded-lg">
           <Settings size={18} />
           Settings
-        </button>
+        </button> */}
         <button 
           onClick={onLogout}
           className="flex items-center gap-3 w-full text-left px-5 py-3 text-sm font-medium text-emerald-100 hover:bg-red-600/80 hover:text-white transition rounded-lg"
