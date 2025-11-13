@@ -130,13 +130,17 @@ export default function OrderTracking() {
           <h2 className="text-xl font-semibold">
             {statusSteps[currentStepIndex]?.label}
           </h2>
-          <p className="text-gray-500 mt-2">
-            {order.status === "served"
-              ? "Your order has been served!"
-              : order.time_remaining
-              ? `Time remaining: ${order.time_remaining}`
-              : `Estimated time: ${order.estimated_time}`}
-          </p>
+          {["pending", "preparing"].includes(order.status) && (
+            <p className="text-gray-500 mt-2">
+              {order.time_remaining
+                ? `Time remaining: ${order.time_remaining} minute${
+                    order.time_remaining > 1 ? "s" : ""
+                  } left`
+                : `Estimated time: ${order.estimated_time} minute${
+                    order.estimated_time > 1 ? "s" : ""
+                  }`}
+            </p>
+          )}
         </div>
 
         {/* Progress Bar */}

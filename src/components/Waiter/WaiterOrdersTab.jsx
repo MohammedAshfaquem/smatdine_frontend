@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import api from "../../api/staff";
 import { toast } from "react-hot-toast";
+import { AuthContext } from "../../context/AuthContext";
 
 export default function WaiterOrdersTab() {
+  const { user } = useContext(AuthContext); // current logged-in waiter
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -13,7 +15,7 @@ export default function WaiterOrdersTab() {
       const res = await api.get("orders/filter/?status=ready&today=true");
       setOrders(res.data);
     } catch (err) {
-      console.error(err);
+      console.error("Fetch Ready Orders Error:", err);
       toast.error("Failed to fetch ready orders");
     } finally {
       setLoading(false);
@@ -21,26 +23,35 @@ export default function WaiterOrdersTab() {
   };
 
   // ✅ Mark order as served
-  const markAsServed = async (orderId) => {
+  const markAsServed = async (orderId, currentWaiter) => {
     try {
-      await api.patch(`orders/${orderId}/mark-served/`);
-      toast.success(`Order ${orderId} marked as served`);
+      const res = await api.patch(`waiter/orders/${orderId}/mark-served/`);
+
+      // Always use backend response, fallback to current tab waiter
+      const servedBy = res?.data?.served_by || currentWaiter?.username || "Waiter";
+
+      toast.success(`Order ${orderId} marked as served by ${servedBy}`);
+
+      // Remove served order from list in this tab only
       setOrders((prev) => prev.filter((o) => o.id !== orderId));
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to update order status");
+      console.error("Mark as Served Error:", err);
+      const msg = err.response?.data?.error || "Failed to update order status";
+      toast.error(msg);
     }
   };
 
+  // ✅ Polling to refresh ready orders every 10s
   useEffect(() => {
     fetchReadyOrders();
-    const interval = setInterval(fetchReadyOrders, 10000);
+    const interval = setInterval(fetchReadyOrders, 10000); // 10 seconds
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div>
       <h2 className="text-xl font-medium mb-4">🍽️ Ready Orders (Today)</h2>
+
       {loading ? (
         <p className="text-gray-500 text-center">Loading orders...</p>
       ) : orders.length === 0 ? (
@@ -66,7 +77,7 @@ export default function WaiterOrdersTab() {
                 ))}
               </ul>
               <button
-                onClick={() => markAsServed(order.id)}
+                onClick={() => markAsServed(order.id, user)}
                 className="bg-[#FACC15] text-[#1F2937] font-semibold px-4 py-2 rounded-xl w-full hover:bg-yellow-400 transition"
               >
                 Mark as Served ✅

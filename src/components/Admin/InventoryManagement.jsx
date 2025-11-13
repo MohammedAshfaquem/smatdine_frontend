@@ -15,6 +15,7 @@ import InventoryStatCard from "./components/InventoryStatCard";
 import InventoryFilters from "./components/InventoryFilters";
 import InventoryCard from "./components/InventoryCard";
 import ConfirmationModal from "../ConfirmationModal.jsx";
+import EditProductModal from "./components/ProductEditModal.jsx";
 
 export default function InventoryManagement() {
   const { accessToken, logout } = useContext(AuthContext);
@@ -302,76 +303,14 @@ export default function InventoryManagement() {
       </div>
 
       {/* Edit Modal */}
-      {showModal && editingItem && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-lg relative overflow-y-auto max-h-[90vh]">
-            <button
-              onClick={() => setShowModal(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
-            >
-              <X size={20} />
-            </button>
-            <h2 className="text-xl font-semibold mb-4">Edit Item</h2>
-
-            <div className="space-y-3">
-              {Object.keys(editForm).map((field) => {
-                if (typeof editForm[field] === "boolean") {
-                  return (
-                    <label key={field} className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        name={field}
-                        checked={editForm[field]}
-                        onChange={handleEditChange}
-                      />
-                      {field.charAt(0).toUpperCase() + field.slice(1)}
-                    </label>
-                  );
-                }
-                return (
-                  <input
-                    key={field}
-                    type={
-                      [
-                        "stock",
-                        "min_stock",
-                        "price",
-                        "spice_level",
-                        "preparation_time",
-                      ].includes(field)
-                        ? "number"
-                        : "text"
-                    }
-                    name={field}
-                    value={editForm[field]}
-                    onChange={handleEditChange}
-                    placeholder={
-                      field.charAt(0).toUpperCase() +
-                      field.slice(1).replace("_", " ")
-                    }
-                    className="w-full border rounded-lg px-3 py-2"
-                  />
-                );
-              })}
-            </div>
-
-            <div className="mt-4 flex justify-end gap-3">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSubmit}
-                className="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <EditProductModal
+        showModal={showModal}
+        setShowModal={setShowModal}
+        editingItem={editingItem}
+        editForm={editForm}
+        handleEditChange={handleEditChange}
+        handleEditSubmit={handleEditSubmit}
+      />
 
       {/* ✅ Delete Confirmation Modal */}
       <ConfirmationModal

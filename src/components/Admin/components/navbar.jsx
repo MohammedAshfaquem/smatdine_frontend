@@ -40,14 +40,14 @@ export default function ProfessionalNavbar({ activeTab, tabTitles }) {
           {/* Right Section - Actions */}
           <div className="flex items-center gap-3">
             {/* Search Bar */}
-            <div className="hidden md:flex items-center bg-gray-100 rounded-lg px-4 py-2 w-64">
+            {/* <div className="hidden md:flex items-center bg-gray-100 rounded-lg px-4 py-2 w-64">
               <Search className="w-4 h-4 text-gray-500 mr-2" />
               <input
                 type="text"
                 placeholder="Search orders, tables..."
                 className="bg-transparent border-none outline-none text-sm text-gray-700 w-full placeholder-gray-500"
               />
-            </div>
+            </div> */}
 
             {/* Notifications */}
             <div className="relative">

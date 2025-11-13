@@ -22,6 +22,20 @@ import {
 import StatCard from "./StatCard";
 import { AuthContext } from "../../context/AuthContext";
 
+// ✅ Convert time ranges like "13:00-15:00" → "1:00 PM–3:00 PM"
+function convertTo12HourRange(range) {
+  if (!range) return "N/A";
+  const [start, end] = range.split("-");
+  return `${to12Hour(start)}–${to12Hour(end)}`;
+}
+
+function to12Hour(time) {
+  let [hour, minute] = time.split(":").map(Number);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12; // converts 13 → 1, 0 → 12
+  return `${hour}:${minute.toString().padStart(2, "0")} ${ampm}`;
+}
+
 export default function MainDashboard({
   stats = { pending: 2, preparing: 2, ready: 1, total: 52 },
 }) {
@@ -32,7 +46,7 @@ export default function MainDashboard({
   const [barData, setBarData] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
 
-  // Fetch hourly orders
+  // ✅ Fetch hourly orders
   useEffect(() => {
     const fetchHourlyData = async () => {
       try {
@@ -49,7 +63,7 @@ export default function MainDashboard({
 
         const data = await response.json();
         const formatted = data.map((item) => ({
-          time: item.label || "N/A",
+          time: convertTo12HourRange(item.label),
           total: item.orders || 0,
         }));
 
@@ -63,7 +77,7 @@ export default function MainDashboard({
     if (accessToken) fetchHourlyData();
   }, [accessToken]);
 
-  // Fetch counts for pie chart
+  // ✅ Fetch counts for pie chart
   useEffect(() => {
     const fetchCounts = async () => {
       try {
@@ -170,7 +184,7 @@ export default function MainDashboard({
           )}
         </div>
 
-        {/* Single Pie Chart */}
+        {/* Order Status Pie Chart */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">
             <div>

@@ -15,6 +15,7 @@ export default function ActiveOrders({
   fetchOrders,
   logout,
   userRole,
+  userId, // current logged-in chef's ID
 }) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -33,7 +34,6 @@ export default function ActiveOrders({
       try {
         const params = new URLSearchParams();
 
-        // ✅ If not "all", filter today's orders by status
         if (statusFilter && statusFilter !== "all") {
           params.append("today", "true");
           params.append("status", statusFilter);
@@ -58,10 +58,15 @@ export default function ActiveOrders({
     fetchFilteredOrders();
   }, [statusFilter, accessToken, logout]);
 
+  // ✅ Filter orders for current chef or unassigned
+  const myOrders = filteredOrders.filter(
+    (order) => !order.chef || order.chef.id === userId
+  );
+
   // ✅ Initialize countdown timers
   useEffect(() => {
     const newTimers = {};
-    filteredOrders.forEach((order) => {
+    myOrders.forEach((order) => {
       if (order.created_at && order.estimated_time) {
         const createdAt = new Date(order.created_at).getTime();
         const estMs = order.estimated_time * 60 * 1000;
@@ -71,7 +76,7 @@ export default function ActiveOrders({
       }
     });
     setTimers(newTimers);
-  }, [filteredOrders]);
+  }, [myOrders]);
 
   // ✅ Countdown tick
   useEffect(() => {
@@ -108,6 +113,11 @@ export default function ActiveOrders({
         }
       );
 
+      if (res.status === 403) {
+        toast.error("You are not authorized to update this order.");
+        return;
+      }
+
       if (!res.ok) throw new Error("Failed to update status");
 
       toast.success(`Order #${orderId} marked as ${newStatus}`);
@@ -130,11 +140,13 @@ export default function ActiveOrders({
     )}`;
 
   // ✅ Apply search filter
-  const searchedOrders = filteredOrders.filter((order) => {
+  const searchedOrders = myOrders.filter((order) => {
     const q = searchQuery.toLowerCase();
     return (
       String(order.id).includes(q) ||
-      String(order.table_number || "").toLowerCase().includes(q)
+      String(order.table_number || "")
+        .toLowerCase()
+        .includes(q)
     );
   });
 
@@ -219,7 +231,11 @@ export default function ActiveOrders({
             return (
               <div
                 key={order.id}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition p-6"
+                className={`bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition p-6 ${
+                  !(!order.chef || order.chef.id === userId)
+                    ? "opacity-50 pointer-events-none"
+                    : ""
+                }`}
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
@@ -254,15 +270,26 @@ export default function ActiveOrders({
                   </div>
                 </div>
 
-                <p className="text-sm text-gray-700 mb-4">
+                <p className="text-sm text-gray-700 mb-2">
                   <span className="font-semibold">
                     Table {order.table_number}
                   </span>{" "}
                   • {order.items?.length || 0} items
                 </p>
 
+                {/* Assigned chef */}
+                {order.chef && (
+                  <p className="text-xs text-gray-500 mb-4">
+                    Assigned to:{" "}
+                    <span className="font-medium text-gray-700">
+                      {order.chef.name || order.chef.email}
+                    </span>
+                  </p>
+                )}
+
                 {/* Timer */}
-                {order.status !== "ready" && (
+                {/* Timer */}
+                {order.status !== "ready" && order.status !== "served" && (
                   <div className="mb-4">
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-xs text-gray-600 font-medium">
@@ -326,21 +353,33 @@ export default function ActiveOrders({
                   {order.status === "pending" && (
                     <button
                       onClick={() => updateOrderStatus(order.id, "preparing")}
-                      className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2"
+                      disabled={!(!order.chef || order.chef.id === userId)}
+                      className={`w-full py-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 ${
+                        !order.chef || order.chef.id === userId
+                          ? "bg-orange-500 hover:bg-orange-600 text-white"
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      }`}
                     >
                       <ChevronRight className="w-4 h-4" />
                       Start Preparing
                     </button>
                   )}
+
                   {order.status === "preparing" && (
                     <button
                       onClick={() => updateOrderStatus(order.id, "ready")}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2"
+                      disabled={!(!order.chef || order.chef.id === userId)}
+                      className={`w-full py-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 ${
+                        !order.chef || order.chef.id === userId
+                          ? "bg-green-600 hover:bg-green-700 text-white"
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      }`}
                     >
                       <CheckCircle className="w-4 h-4" />
                       Mark Ready
                     </button>
                   )}
+
                   {order.status === "ready" && (
                     <div className="bg-green-50 border-2 border-green-500 text-green-700 py-3 rounded-lg font-semibold text-sm text-center">
                       ✅ Ready to Serve
@@ -365,4 +404,3 @@ export default function ActiveOrders({
     </div>
   );
 }
- 

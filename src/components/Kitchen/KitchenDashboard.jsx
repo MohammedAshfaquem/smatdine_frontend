@@ -17,7 +17,7 @@ export default function KitchenDashboard() {
   const [user, setUser] = useState(null);
 
   const API_URL = "http://127.0.0.1:8000/kitchen/orders/";
-  const COMPLETED_ORDERS_URL = "http://127.0.0.1:8000/orders/filter/?status=served&today=true";
+  const COMPLETED_ORDERS_URL = "http://127.0.0.1:8000/kitchen/orders/completed/"; // ✅ updated
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -57,7 +57,6 @@ export default function KitchenDashboard() {
     }
 
     try {
-      setLoading(true);
       const res = await fetch(COMPLETED_ORDERS_URL, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
@@ -69,14 +68,14 @@ export default function KitchenDashboard() {
     } catch (err) {
       console.error(err);
       toast.error("Unable to fetch completed orders.");
-    } finally {
-      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchOrders();
     fetchCompletedOrders();
+    const interval = setInterval(fetchCompletedOrders, 10000); // auto-refresh
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) {
@@ -97,6 +96,9 @@ export default function KitchenDashboard() {
     total: orders.length,
   };
 
+  const userId = user?.id || null;
+  const userRole = user?.role || null;
+
   return (
     <div className="flex bg-gray-50 min-h-screen">
       <KitchenSidebar
@@ -114,6 +116,8 @@ export default function KitchenDashboard() {
             accessToken={accessToken}
             fetchOrders={fetchOrders}
             logout={logout}
+            userRole={userRole}
+            userId={userId}
           />
         )}
         {activeTab === "inventory" && <InventoryDashboard />}

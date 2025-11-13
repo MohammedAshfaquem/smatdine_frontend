@@ -42,17 +42,23 @@ function CompletedOrderCard({ order }) {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
+  // Handle multiple possible name keys safely
+  const chefName = order.chef_name || "—";
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition p-6">
       <div className="flex items-start justify-between mb-4">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <h3 className="font-bold text-gray-900 text-lg">Order #{order.id}</h3>
+            <h3 className="font-bold text-gray-900 text-lg">
+              Order #{order.id}
+            </h3>
             <span className="flex items-center gap-1 px-2.5 py-1 bg-green-50 text-green-600 border border-green-200 rounded-full text-xs font-medium">
               <CheckCircle className="w-3 h-3" />
               {order.status || "Served"}
             </span>
           </div>
+
           <div className="flex items-center gap-4 text-sm text-gray-600">
             <span className="flex items-center gap-1">
               <Users className="w-4 h-4" />
@@ -63,7 +69,13 @@ function CompletedOrderCard({ order }) {
               {order.estimated_time ? `${order.estimated_time} min` : "--"}
             </span>
           </div>
+
+          {/* 👨‍🍳 Chef Name */}
+          <div className="mt-1 text-sm text-gray-700">
+            <span className="font-medium text-gray-800">Chef:</span> {chefName}
+          </div>
         </div>
+
         <div className="text-right">
           <p className="text-sm font-semibold text-gray-900">
             {formatTime(order.created_at)}
@@ -204,7 +216,9 @@ export default function CompletedOrderManagement() {
           icon={DollarSign}
           label="Total Sales"
           value={`₹${totalSales.toFixed(2)}`}
-          subtext={`From ${salesSummary?.served_orders_count || 0} served orders`}
+          subtext={`From ${
+            salesSummary?.served_orders_count || 0
+          } served orders`}
           color="text-yellow-600"
           bgColor="bg-yellow-50"
         />
