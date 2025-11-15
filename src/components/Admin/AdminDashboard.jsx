@@ -6,7 +6,7 @@ import InventoryManagement from "./InventoryManagement";
 import CompletedOrderManagement from "./CompletedOrdersManagment";
 import MainPage from "./MainPage";
 import ProfessionalNavbar from "./components/navbar";
-import Leaderboard from "./Reports";
+import Leaderboard from "./Leaderboard";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");

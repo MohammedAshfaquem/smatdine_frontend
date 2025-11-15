@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { Droplets, Receipt, Brush, MessageSquare } from "lucide-react";
 import { toast } from "react-hot-toast";
 import ConfirmationModal from "../ConfirmationModal.jsx";
+import Lottie from "lottie-react";
+import SearchingAnimation from "../../assets/lottie/Searching.json";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export default function AssistancePage() {
@@ -52,20 +55,17 @@ export default function AssistancePage() {
 
       bodyData.type = reqType;
 
-      const response = await fetch(
-        `${API_URL}/waiter-request/${tableId}/`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(bodyData),
-        }
-      );
+      const response = await fetch(`${API_URL}/waiter-request/${tableId}/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bodyData),
+      });
 
       const data = await response.json();
       if (response.ok) {
         toast.success(data.message);
         setGeneralMessage("");
-        await fetchRequests(); // ✅ Refresh after adding new
+        await fetchRequests(); // refresh after adding new
       } else {
         toast.error(data.error || "Request failed");
       }
@@ -77,24 +77,26 @@ export default function AssistancePage() {
     }
   };
 
-  // ✅ Fetch requests and update only when data changes
   const fetchRequests = async () => {
     if (!tableId) return;
     try {
       setFetching(true);
-      const res = await fetch(
-        `${API_URL}/waiter/requests/${tableId}/`
-      );
+      const res = await fetch(`${API_URL}/waiter-request/${tableId}/`);
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
 
+      // Extract active_requests array
+      const activeRequests = Array.isArray(data.active_requests)
+        ? data.active_requests
+        : [];
+
       const prevData = prevRequestsRef.current;
       const changed =
-        JSON.stringify(prevData) !== JSON.stringify(data);
+        JSON.stringify(prevData) !== JSON.stringify(activeRequests);
 
       if (changed) {
-        setRequests(Array.isArray(data) ? data : []);
-        prevRequestsRef.current = data;
+        setRequests(activeRequests);
+        prevRequestsRef.current = activeRequests;
         console.log("🔁 Requests updated (data changed)");
       } else {
         console.log("✅ No change detected, skip update");
@@ -108,14 +110,12 @@ export default function AssistancePage() {
   };
 
   useEffect(() => {
-    if (tableId) {
-      fetchRequests();
-    }
+    if (tableId) fetchRequests();
   }, [tableId]);
 
   useEffect(() => {
     if (!tableId) return;
-    const interval = setInterval(fetchRequests, 10000); // 10 sec
+    const interval = setInterval(fetchRequests, 10000);
     return () => clearInterval(interval);
   }, [tableId]);
 
@@ -177,8 +177,13 @@ export default function AssistancePage() {
               Loading requests...
             </div>
           ) : requests.length === 0 ? (
-            <div className="px-6 py-12 text-center text-gray-500">
-              You haven't made any requests yet.
+            <div className="flex flex-col items-center justify-center py-10">
+              <div className="w-56 h-56 mb-4">
+                <Lottie animationData={SearchingAnimation} loop={true} />
+              </div>
+              <p className="text-gray-500 text-lg">
+                You haven't made any requests yet.
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">

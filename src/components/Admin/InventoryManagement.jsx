@@ -50,6 +50,33 @@ export default function InventoryManagement() {
     itemId: null,
   });
 
+  const handleExportInventory = async () => {
+    if (!accessToken) {
+      toast.error("No access token found. Please log in again.");
+      logout();
+      return;
+    }
+
+    try {
+      const res = await fetch("http://127.0.0.1:8000/export/inventory-pdf/", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      if (!res.ok) throw new Error("Failed to export PDF");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "inventory_report.pdf";
+      a.click();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to download PDF");
+    }
+  };
+
   // Fetch menu items
   const fetchMenuItems = async () => {
     if (!accessToken) {
@@ -215,9 +242,13 @@ export default function InventoryManagement() {
           </p>
         </div>
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+          <button
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+            onClick={handleExportInventory}
+          >
             <Download size={18} /> Export
           </button>
+
           <button
             onClick={() => navigate("/add-product")}
             className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"

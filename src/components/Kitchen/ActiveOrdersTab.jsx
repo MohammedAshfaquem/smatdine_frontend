@@ -8,6 +8,9 @@ import {
   ChevronRight,
   ClipboardList,
 } from "lucide-react";
+import Lottie from "lottie-react";
+import SearchingAnimation from "../../assets/lottie/Searching.json";
+
 
 export default function ActiveOrders({
   orders,
@@ -114,7 +117,7 @@ export default function ActiveOrders({
       );
 
       if (res.status === 403) {
-        toast.error("You are not authorized to update this order.");
+        toast.success("Another chef is already handling this order.");
         return;
       }
 
@@ -391,13 +394,15 @@ export default function ActiveOrders({
           })
         ) : (
           <div className="col-span-full text-center py-12">
-            <ClipboardList className="mx-auto text-gray-400 mb-4" size={64} />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No orders found
-            </h3>
-            <p className="text-gray-600">
-              No orders placed today or matching your filter.
-            </p>
+            <div className="flex flex-col items-center justify-center py-10">
+              <div className="w-56 h-56 mb-4">
+                <Lottie animationData={SearchingAnimation} loop={true} />
+              </div>
+              <p className="text-gray-500 text-lg">
+                              No orders placed today or matching your filter.
+
+              </p>
+            </div>
           </div>
         )}
       </div>

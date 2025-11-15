@@ -1,14 +1,25 @@
-import React from "react";
-import { 
-  LayoutDashboard, 
-  ClipboardList, 
-  CheckCircle, 
-  Archive, 
-  Settings, 
-  LogOut 
+import React, { useState } from "react";
+import {
+  LayoutDashboard,
+  ClipboardList,
+  CheckCircle,
+  Archive,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+import ConfirmationModal from "../ConfirmationModal.jsx";
 
-function KitchenSidebar({ activeTab, setActiveTab, onLogout, user }) {
+function KitchenSidebar({
+  activeTab,
+  setActiveTab,
+  onLogout,
+  user,
+  setSidebarWidth,
+}) {
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "active-orders", label: "Active Orders", icon: ClipboardList },
@@ -16,77 +27,120 @@ function KitchenSidebar({ activeTab, setActiveTab, onLogout, user }) {
     { id: "inventory", label: "Inventory", icon: Archive },
   ];
 
+  const handleLogoutConfirm = () => {
+    setShowLogoutModal(false);
+    onLogout();
+  };
+
+  const toggleCollapse = () => {
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    if (setSidebarWidth) setSidebarWidth(newState ? 80 : 256); // px values
+  };
+
   return (
-    <div className="w-72 bg-[#065F46] text-white flex flex-col shadow-xl fixed left-0 top-0 h-screen z-50">
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-6 py-5 border-b border-emerald-800 bg-[#047857]">
-        <div className="w-10 h-10 rounded-xl bg-[#059669] flex items-center justify-center text-white text-lg font-bold shadow-md">
-          👨‍🍳
+    <>
+      <div
+        className={`fixed top-0 left-0 h-screen bg-white border-r border-gray-200 flex flex-col shadow-sm transition-all duration-300 ${
+          isCollapsed ? "w-20" : "w-64"
+        }`}
+      >
+        {/* Logo & Collapse Button */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200">
+          {!isCollapsed ? (
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center text-white text-lg font-bold shadow-sm">
+                SD
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-gray-900">SmartDine</h1>
+                <p className="text-xs text-gray-600">Kitchen Portal</p>
+              </div>
+            </div>
+          ) : (
+            <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center text-white text-lg font-bold shadow-sm mx-auto">
+              SD
+            </div>
+          )}
+          <button
+            onClick={toggleCollapse}
+            className={`${
+              isCollapsed ? "absolute -right-3 top-8" : ""
+            } w-7 h-7 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-emerald-600 hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-300 shadow-sm hover:shadow-md z-10`}
+            title={isCollapsed ? "Expand" : "Collapse"}
+          >
+            {isCollapsed ? (
+              <ChevronRight size={14} />
+            ) : (
+              <ChevronLeft size={14} />
+            )}
+          </button>
         </div>
-        <div>
-          <h1 className="text-lg font-semibold text-white">SmartDine</h1>
-          <p className="text-xs text-emerald-200">Kitchen System</p>
+
+        {/* User Info */}
+        {!isCollapsed && (
+          <div className="flex items-center gap-3 px-6 py-4">
+            <div className="w-10 h-10 rounded-full bg-gray-200 text-gray-700 flex items-center justify-center font-semibold text-sm">
+              {user?.name?.charAt(0)?.toUpperCase() || "C"}
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900">
+                {user?.name || "Chef Kumar"}
+              </h2>
+              <span className="text-xs text-gray-600">Kitchen Staff</span>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation */}
+        <nav className="flex-1 mt-6 px-4 overflow-auto">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`flex items-center gap-3 w-full text-left px-4 py-4 text-sm font-medium transition rounded-lg mb-1 ${
+                  isActive
+                    ? "bg-emerald-600 text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                {/* Dynamically adjust icon size */}
+                <Icon className={isCollapsed ? "w-7 h-10" : "w-5 h-5"} />
+                {!isCollapsed && item.label}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Logout */}
+        <div className="border-t border-gray-200 px-4 pb-4 mt-auto">
+          <button
+            onClick={() => setShowLogoutModal(true)}
+            className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 transition rounded-lg ${
+              isCollapsed ? "justify-center" : ""
+            }`}
+          >
+            <LogOut className="w-5 h-5" />
+            {!isCollapsed && "Logout"}
+          </button>
         </div>
       </div>
 
-      {/* User Info */}
-      <div className="flex items-center gap-3 px-6 py-4 border-b border-emerald-800 bg-[#047857]/70">
-        <div className="w-10 h-10 rounded-full bg-emerald-900 text-[#FACC15] flex items-center justify-center font-semibold">
-          {user?.name?.charAt(0)?.toUpperCase() || "C"}
-        </div>
-        <div>
-          <h2 className="font-medium text-white">{user?.name || "Chef Kumar"}</h2>
-          <span className="text-xs bg-[#FACC15]/20 text-[#FACC15] px-2 py-0.5 rounded-full font-medium">
-            Kitchen
-          </span>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 mt-3 px-2 overflow-auto">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`relative flex items-center gap-3 w-full text-left px-5 py-3 text-sm font-medium transition rounded-lg my-1 ${
-                isActive
-                  ? "bg-[#059669] text-white font-semibold"
-                  : "text-emerald-100 hover:bg-emerald-700/50 hover:text-white"
-              }`}
-            >
-              <Icon size={18} />
-              {item.label}
-              {isActive && (
-                <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FACC15] rounded-r"></span>
-              )}
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* Settings & Logout */}
-      <div className="px-2 pb-2">
-        {/* <button className="flex items-center gap-3 w-full text-left px-5 py-3 text-sm font-medium text-emerald-100 hover:bg-emerald-700/50 hover:text-white transition rounded-lg">
-          <Settings size={18} />
-          Settings
-        </button> */}
-        <button 
-          onClick={onLogout}
-          className="flex items-center gap-3 w-full text-left px-5 py-3 text-sm font-medium text-emerald-100 hover:bg-red-600/80 hover:text-white transition rounded-lg"
-        >
-          <LogOut size={18} />
-          Logout
-        </button>
-      </div>
-
-      {/* Footer */}
-      <div className="px-6 py-4 border-t border-emerald-800 bg-[#047857]/70 text-center text-xs text-emerald-200">
-        <span className="font-medium text-white">SmartDine Kitchen</span> v1.0
-      </div>
-    </div>
+      {/* Logout Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showLogoutModal}
+        title="Logout Confirmation"
+        message="Are you sure you want to log out from SmartDine?"
+        type="logout"
+        confirmText="Yes, Logout"
+        cancelText="Cancel"
+        onConfirm={handleLogoutConfirm}
+        onCancel={() => setShowLogoutModal(false)}
+      />
+    </>
   );
 }
 

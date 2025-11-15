@@ -11,6 +11,9 @@ import {
 } from "lucide-react";
 import api from "../../api/staff";
 import { toast } from "react-hot-toast";
+import Lottie from "lottie-react";
+import SearchingAnimation from "../../assets/lottie/Searching.json";
+
 
 export default function WaiterRequestsTab() {
   const [requests, setRequests] = useState([]);
@@ -125,7 +128,18 @@ export default function WaiterRequestsTab() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+
+      
       <div className="max-w-7xl mx-auto">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-md">
+            <span className="text-2xl text-white">🍽️</span>
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Customer Requests</h1>
+            <p className="text-gray-500">Today's request ready to handle</p>
+          </div>
+          </div>
         <div className="flex items-center gap-4 mb-8">
           {/* Search */}
           <div className="flex-1 relative">
@@ -219,7 +233,14 @@ export default function WaiterRequestsTab() {
         {loading ? (
           <p className="text-gray-500 text-center">Loading requests...</p>
         ) : filteredRequests.length === 0 ? (
-          <p className="text-gray-500 text-center">No requests found.</p>
+          <div className="flex flex-col items-center justify-center py-10">
+              <div className="w-56 h-56 mb-4">
+                <Lottie animationData={SearchingAnimation} loop={true} />
+              </div>
+              <p className="text-gray-500 text-lg">
+                No Request Found.
+              </p>
+            </div>
         ) : (
           <div className="grid grid-cols-2 gap-6">
             {filteredRequests.map((req) => {

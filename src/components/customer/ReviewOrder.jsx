@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "react-hot-toast";import { ArrowLeft, MapPin, Check, Lightbulb } from "lucide-react";
+import { toast } from "react-hot-toast";
+import { ArrowLeft, MapPin, Check, Lightbulb } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
@@ -71,7 +72,9 @@ export default function ReviewOrder() {
             <ArrowLeft size={20} className="text-gray-700" />
           </button>
           <div>
-            <h1 className="text-lg font-normal text-emerald-800">Review Your Order</h1>
+            <h1 className="text-lg font-normal text-emerald-800">
+              Review Your Order
+            </h1>
             <p className="text-gray-500 text-sm mt-1">
               Confirm details before placing order
             </p>
@@ -87,7 +90,9 @@ export default function ReviewOrder() {
               <MapPin size={28} className="text-white" />
             </div>
             <div>
-              <p className="text-gray-600 text-sm font-medium">Delivery Location</p>
+              <p className="text-gray-600 text-sm font-medium">
+                Delivery Location
+              </p>
               <p className="text-emerald-800 text-lg font-bold">
                 Table {tableId || "N/A"}
               </p>
@@ -97,23 +102,21 @@ export default function ReviewOrder() {
 
         {/* Order Summary */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-          <h2 className="text-xl font-normal text-emerald-800 mb-6">Order Summary</h2>
+          <h2 className="text-xl font-normal text-emerald-800 mb-6">
+            Order Summary
+          </h2>
 
           {cartItems.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No items in your cart.</p>
+            <p className="text-gray-500 text-center py-8">
+              No items in your cart.
+            </p>
           ) : (
             <div className="space-y-4">
               {cartItems.map((item) => {
-                const menuItem = item.menu_item;
-                const customDish = item.custom_dish;
-                const imageSrc = menuItem
-                  ? menuItem.image?.startsWith("http")
-                    ? menuItem.image
-                    : `${API_URL}${menuItem.image}`
-                  : customDish?.image_url?.startsWith("http")
-                  ? customDish.image_url
-                  : customDish?.image_url
-                  ? `${API_URL}${customDish.image_url}`
+                const imageSrc = item.image
+                  ? item.image.startsWith("http")
+                    ? item.image
+                    : `${API_URL}${item.image}`
                   : "https://via.placeholder.com/80x80?text=No+Image";
 
                 return (
@@ -124,36 +127,20 @@ export default function ReviewOrder() {
                     {/* Image */}
                     <img
                       src={imageSrc}
-                      alt={menuItem?.name || customDish?.name || "Item"}
+                      alt={item.name || "Item"}
                       className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
                     />
 
                     <div className="flex-1">
+                      {/* Item Name */}
                       <h3 className="font-semibold text-emerald-800 text-base mb-1">
-                        {menuItem?.name || customDish?.name}
+                        {item.name}
                       </h3>
 
-                      {customDish && (
-                        <div className="text-sm text-gray-600 mb-1">
-                          {customDish.base && <div>Base: {customDish.base.name}</div>}
-                          {customDish.dish_ingredients && (
-                            <div>
-                              Ingredients:{" "}
-                              {customDish.dish_ingredients
-                                .map((d) => `${d.ingredient.name} ×${d.quantity}`)
-                                .join(", ")}
-                            </div>
-                          )}
-                          {customDish.preparation_time && (
-                            <div>Prep Time: {customDish.preparation_time} min</div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Menu item prep time */}
-                      {menuItem?.preparation_time && (
+                      {/* Preparation Time */}
+                      {item.preparation_time && (
                         <p className="text-xs text-emerald-700 mt-1">
-                          Prep Time: {menuItem.preparation_time} min
+                          Prep Time: {item.preparation_time} min
                         </p>
                       )}
 
@@ -165,11 +152,14 @@ export default function ReviewOrder() {
                       )}
                     </div>
 
+                    {/* Price & Quantity */}
                     <div className="text-right">
                       <p className="text-lg font-bold text-emerald-600">
                         ₹{parseFloat(item.subtotal || 0).toFixed(2)}
                       </p>
-                      <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                      <p className="text-sm text-gray-600">
+                        Qty: {item.quantity}
+                      </p>
                     </div>
                   </div>
                 );
@@ -180,24 +170,37 @@ export default function ReviewOrder() {
 
         {/* Price Summary */}
         <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-200">
-          <h2 className="text-xl font-medium text-emerald-800 mb-6">Price Details</h2>
+          <h2 className="text-xl font-medium text-emerald-800 mb-6">
+            Price Details
+          </h2>
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-gray-700 font-medium">
-                Subtotal ({cartItems.length} {cartItems.length === 1 ? "item" : "items"})
+                Subtotal ({cartItems.length}{" "}
+                {cartItems.length === 1 ? "item" : "items"})
               </span>
-              <span className="text-gray-900 font-normal">₹{subtotal.toFixed(2)}</span>
+              <span className="text-gray-900 font-normal">
+                ₹{subtotal.toFixed(2)}
+              </span>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-gray-700 font-normal">Tax & Service Charges (8%)</span>
-              <span className="text-gray-900 font-normal">₹{tax.toFixed(2)}</span>
+              <span className="text-gray-700 font-normal">
+                Tax & Service Charges (8%)
+              </span>
+              <span className="text-gray-900 font-normal">
+                ₹{tax.toFixed(2)}
+              </span>
             </div>
 
             <div className="flex items-center justify-between pt-4 border-t-2 border-emerald-300">
-              <span className="text-lg font-bold text-emerald-900">Total Amount</span>
-              <span className="text-2xl font-bold text-emerald-600">₹{totalAmount.toFixed(2)}</span>
+              <span className="text-lg font-bold text-emerald-900">
+                Total Amount
+              </span>
+              <span className="text-2xl font-bold text-emerald-600">
+                ₹{totalAmount.toFixed(2)}
+              </span>
             </div>
           </div>
         </div>

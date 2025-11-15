@@ -42,7 +42,9 @@ export default function MainDashboard({
   const { accessToken } = useContext(AuthContext);
   const [pendingCount, setPendingCount] = useState(0);
   const [preparingCount, setPreparingCount] = useState(0);
+  const [readyCount, setreadyCount] = useState(0);
   const [servedCount, setServedCount] = useState(0);
+  
   const [barData, setBarData] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
 
@@ -81,7 +83,7 @@ export default function MainDashboard({
   useEffect(() => {
     const fetchCounts = async () => {
       try {
-        const statuses = ["pending", "preparing", "served"];
+        const statuses = ["pending", "preparing","ready", "served"];
         const results = await Promise.all(
           statuses.map((status) =>
             fetch(
@@ -98,7 +100,8 @@ export default function MainDashboard({
 
         setPendingCount(results[0]?.length || 0);
         setPreparingCount(results[1]?.length || 0);
-        setServedCount(results[2]?.length || 0);
+        setreadyCount(results[2]?.length || 0)
+        setServedCount(results[3]?.length || 0);
       } catch (err) {
         console.error("Error fetching order counts:", err);
       }
@@ -108,9 +111,11 @@ export default function MainDashboard({
   }, [accessToken]);
 
   const statusData = [
-    { name: "Pending", value: pendingCount, color: "#FFA500" },
-    { name: "Preparing", value: preparingCount, color: "#0080FF" },
-    { name: "Served", value: servedCount, color: "#10B981" },
+    { name: "Pending", value: pendingCount, color: "#F59E0B" },
+    { name: "Preparing", value: preparingCount, color: "#3B82F6" },
+    { name: "ready", value: readyCount, color: "#10B981" },
+    { name: "served", value: servedCount, color: "#6366F1" },
+
   ];
 
   return (
@@ -135,13 +140,13 @@ export default function MainDashboard({
         <StatCard
           icon={CheckCircle}
           label="Ready to Serve"
-          value={servedCount}
+          value={readyCount}
           color="bg-green-600"
         />
         <StatCard
           icon={TrendingUp}
           label="Total Today"
-          value={pendingCount + preparingCount + servedCount}
+          value={servedCount}
           color="bg-purple-500"
         />
       </div>

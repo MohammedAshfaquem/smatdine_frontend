@@ -7,19 +7,19 @@ export default function ConfirmationModal({
   message,
   onConfirm,
   onCancel,
-  type = "default", 
+  type = "default",
   confirmText = "Confirm",
   cancelText = "Cancel",
 }) {
   const icons = {
-    approve: { icon: <CheckCircle2 size={40} className="text-emerald-600" />, bg: "bg-emerald-100" },
-    delete: { icon: <Trash2 size={40} className="text-red-600" />, bg: "bg-red-100" },
-    logout: { icon: <LogOut size={40} className="text-yellow-600" />, bg: "bg-yellow-100" },
-    warning: { icon: <AlertTriangle size={40} className="text-orange-600" />, bg: "bg-orange-100" },
-    default: { icon: <AlertTriangle size={40} className="text-gray-600" />, bg: "bg-gray-100" },
+    approve: { icon: <CheckCircle2 size={40} className="text-emerald-600" />, bg: "bg-emerald-100", buttonColor: "bg-emerald-600 hover:bg-emerald-700" },
+    delete: { icon: <Trash2 size={40} className="text-red-600" />, bg: "bg-red-100", buttonColor: "bg-red-600 hover:bg-red-700" },
+    logout: { icon: <LogOut size={40} className="text-yellow-600" />, bg: "bg-yellow-100", buttonColor: "bg-yellow-600 hover:bg-yellow-700" },
+    warning: { icon: <AlertTriangle size={40} className="text-orange-600" />, bg: "bg-orange-100", buttonColor: "bg-orange-600 hover:bg-orange-700" },
+    default: { icon: <AlertTriangle size={40} className="text-gray-600" />, bg: "bg-gray-100", buttonColor: "bg-gray-600 hover:bg-gray-700" },
   };
 
-  const { icon, bg } = icons[type] || icons.default;
+  const { icon, bg, buttonColor } = icons[type] || icons.default;
 
   return (
     <AnimatePresence>
@@ -41,18 +41,12 @@ export default function ConfirmationModal({
             </div>
 
             <h2 className="text-xl font-semibold text-gray-800 mb-2">{title}</h2>
-            <p className="text-gray-500 mb-6">{message}</p>
+            <div className="text-gray-500 mb-6">{message}</div>
 
             <div className="flex justify-center gap-3">
               <button
                 onClick={onConfirm}
-                className={`${
-                  type === "approve"
-                    ? "bg-emerald-600 hover:bg-emerald-700"
-                    : type === "logout"
-                    ? "bg-yellow-600 hover:bg-yellow-700"
-                    : "bg-red-600 hover:bg-red-700"
-                } text-white px-4 py-2 rounded-lg transition`}
+                className={`${buttonColor} text-white px-4 py-2 rounded-lg transition`}
               >
                 {confirmText}
               </button>

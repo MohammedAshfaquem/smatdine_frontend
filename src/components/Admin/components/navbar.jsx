@@ -1,17 +1,48 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Bell, Search, Settings, User, ChevronDown, Menu } from "lucide-react";
+import { AuthContext } from "../../../context/AuthContext";
+import ConfirmationModal from "../../ConfirmationModal.jsx";
+import { useNavigate } from "react-router-dom";
 
-export default function ProfessionalNavbar({ activeTab, tabTitles }) {
+export default function ProfessionalNavbar({
+  activeTab,
+  tabTitles,
+  isCollapsed = false,
+}) {
+  const navigate = useNavigate();
+
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const { user, logout } = useContext(AuthContext);
+
+  const handleLogoutConfirm = () => {
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    sessionStorage.clear();
+    logout();
+    setShowLogoutModal(false);
+    navigate("/login");
+  };
 
   const notifications = [
     { id: 1, text: "New order from Table 5", time: "2 min ago", unread: true },
-    { id: 2, text: "Order #ORD-045 completed", time: "10 min ago", unread: true },
-    { id: 3, text: "Low stock alert: Pasta", time: "1 hour ago", unread: false }
+    {
+      id: 2,
+      text: "Order #ORD-045 completed",
+      time: "10 min ago",
+      unread: true,
+    },
+    {
+      id: 3,
+      text: "Low stock alert: Pasta",
+      time: "1 hour ago",
+      unread: false,
+    },
   ];
 
-  const unreadCount = notifications.filter(n => n.unread).length;
+  const unreadCount = notifications.filter((n) => n.unread).length;
 
   return (
     <div className="sticky top-0 z-20 bg-white shadow-sm border-b border-gray-200">
@@ -27,11 +58,11 @@ export default function ProfessionalNavbar({ activeTab, tabTitles }) {
                 {tabTitles?.[activeTab] || "Dashboard"}
               </h1>
               <p className="text-sm text-gray-500 mt-0.5">
-                {new Date().toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
+                {new Date().toLocaleDateString("en-US", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
                 })}
               </p>
             </div>
@@ -51,7 +82,7 @@ export default function ProfessionalNavbar({ activeTab, tabTitles }) {
 
             {/* Notifications */}
             <div className="relative">
-              <button
+              {/* <button
                 onClick={() => setShowNotifications(!showNotifications)}
                 className="relative p-2 hover:bg-gray-100 rounded-lg transition"
               >
@@ -61,24 +92,28 @@ export default function ProfessionalNavbar({ activeTab, tabTitles }) {
                     {unreadCount}
                   </span>
                 )}
-              </button>
+              </button> */}
 
               {/* Notifications Dropdown */}
               {showNotifications && (
                 <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
                   <div className="px-4 py-2 border-b border-gray-200">
-                    <h3 className="font-semibold text-gray-900">Notifications</h3>
+                    <h3 className="font-semibold text-gray-900">
+                      Notifications
+                    </h3>
                   </div>
                   <div className="max-h-64 overflow-y-auto">
                     {notifications.map((notif) => (
                       <div
                         key={notif.id}
                         className={`px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 ${
-                          notif.unread ? 'bg-blue-50' : ''
+                          notif.unread ? "bg-blue-50" : ""
                         }`}
                       >
                         <p className="text-sm text-gray-900">{notif.text}</p>
-                        <p className="text-xs text-gray-500 mt-1">{notif.time}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {notif.time}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -91,11 +126,6 @@ export default function ProfessionalNavbar({ activeTab, tabTitles }) {
               )}
             </div>
 
-            {/* Settings */}
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition">
-              <Settings className="w-5 h-5 text-gray-600" />
-            </button>
-
             {/* Profile Dropdown */}
             <div className="relative">
               <button
@@ -106,7 +136,9 @@ export default function ProfessionalNavbar({ activeTab, tabTitles }) {
                   <User className="w-5 h-5 text-white" />
                 </div>
                 <div className="hidden md:block text-left">
-                  <p className="text-sm font-semibold text-gray-900">Admin User</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    Admin User
+                  </p>
                   <p className="text-xs text-gray-500">Administrator</p>
                 </div>
                 <ChevronDown className="w-4 h-4 text-gray-600" />
@@ -116,26 +148,35 @@ export default function ProfessionalNavbar({ activeTab, tabTitles }) {
               {showProfile && (
                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
                   <div className="px-4 py-3 border-b border-gray-200">
-                    <p className="text-sm font-semibold text-gray-900">Admin User</p>
-                    <p className="text-xs text-gray-500">admin@restaurant.com</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {user?.name || "Admin User"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {user?.email || "admin@restaurant.com"}
+                    </p>
                   </div>
-                  <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                    My Profile
-                  </a>
-                  <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                    Settings
-                  </a>
-                  <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                    Help & Support
-                  </a>
-                  <div className="border-t border-gray-200 mt-2 pt-2">
-                    <a href="#" className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                      Sign Out
-                    </a>
-                  </div>
+                  <button
+                    onClick={() => setShowLogoutModal(true)}
+                    className={`w-full flex items-center gap-4 px-4 py-3.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300 ${
+                      isCollapsed ? "justify-center" : ""
+                    }`}
+                  >
+                    Sign Out
+                  </button>
                 </div>
               )}
             </div>
+
+            <ConfirmationModal
+              isOpen={showLogoutModal}
+              onConfirm={handleLogoutConfirm}
+              onCancel={() => setShowLogoutModal(false)}
+              type="logout"
+              title="Logout Confirmation"
+              message="Are you sure you want to log out from SmartDine?"
+              confirmText="Yes, Logout"
+              cancelText="Cancel"
+            />
           </div>
         </div>
       </div>

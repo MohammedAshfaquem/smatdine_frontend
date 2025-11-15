@@ -4,7 +4,12 @@ import { X, Trash2, Minus, Plus, ArrowRight } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
-export default function CartSidebar({ showCart, setShowCart, tableId, onCartChange }) {
+export default function CartSidebar({
+  showCart,
+  setShowCart,
+  tableId,
+  onCartChange,
+}) {
   const [cartItems, setCartItems] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [clearing, setClearing] = useState(false);
@@ -28,14 +33,6 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
     fetchCart();
   }, [tableId, showCart]);
 
-  useEffect(() => {
-    const newTotal = cartItems.reduce(
-      (sum, item) => sum + parseFloat(item.subtotal || 0),
-      0
-    );
-    setTotalAmount(newTotal);
-  }, [cartItems]);
-
   const updateQuantity = async (itemId, newQty) => {
     if (newQty < 1) return;
     try {
@@ -56,7 +53,7 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
             ? {
                 ...item,
                 quantity: newQty,
-                subtotal: newQty * parseFloat(item.menu_item?.price || item.custom_dish?.total_price || 0),
+                subtotal: newQty * parseFloat(item.subtotal / item.quantity),
               }
             : item
         )
@@ -90,6 +87,7 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
     if (cartItems.length === 0) return;
     setClearing(true);
     try {
+      // Send all DELETE requests
       await Promise.all(
         cartItems.map((item) =>
           fetch(`${API_URL}/cart/remove/${item.id}/?table_number=${tableId}`, {
@@ -97,6 +95,7 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
           })
         )
       );
+      // Clear frontend state
       setCartItems([]);
       setTotalAmount(0);
       if (onCartChange) onCartChange(0);
@@ -109,9 +108,7 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
 
   const handlePlaceOrder = () => {
     setShowCart(false);
-    navigate(`/review-order/${tableId}`, {
-      state: { cartItems, totalAmount },
-    });
+    navigate(`/review-order/${tableId}`, { state: { cartItems, totalAmount } });
   };
 
   return (
@@ -201,21 +198,18 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
                   <div className="flex gap-3">
                     <img
                       src={
-                        item.menu_item
-                          ? item.menu_item?.image?.startsWith("/media/")
-                            ? `${API_URL}${item.menu_item.image}`
-                            : item.menu_item?.image
-                          : item.custom_dish?.image_url ||
-                            "https://via.placeholder.com/80x80?text=No+Image"
+                        item.image.startsWith("/media/")
+                          ? `${API_URL}${item.image}`
+                          : item.image
                       }
-                      alt={item.menu_item?.name || item.custom_dish?.name || "Item"}
+                      alt={item.name}
                       className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
                     />
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between mb-2">
                         <h3 className="font-bold text-emerald-800 text-base leading-tight">
-                          {item.menu_item?.name || item.custom_dish?.name}
+                          {item.name}
                         </h3>
                         <button
                           onClick={() => handleRemoveItem(item.id)}
@@ -225,24 +219,12 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
                         </button>
                       </div>
 
-                      {/* Custom Dish Base & Ingredients */}
-                      {/* {item.custom_dish && (
-                        <div className="text-gray-600 text-sm mb-2">
-                          <div>Base: {item.custom_dish.base?.name}</div>
-                          <div>
-                            Ingredients:{" "}
-                            {item.custom_dish.dish_ingredients
-                              ?.map((di) => `${di.quantity}x ${di.ingredient.name}`)
-                              .join(", ")}
-                          </div>
-                        </div>
-                      )} */}
-
-                      {/* Quantity & Subtotal */}
                       <div className="flex items-center justify-between mt-3">
                         <div className="flex items-center gap-2.5 bg-emerald-50 rounded-lg px-3 py-1.5">
                           <button
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity - 1)
+                            }
                             className="text-emerald-600 hover:text-emerald-700 transition-colors duration-300"
                           >
                             <Minus size={16} strokeWidth={2.5} />
@@ -251,7 +233,9 @@ export default function CartSidebar({ showCart, setShowCart, tableId, onCartChan
                             {item.quantity}
                           </span>
                           <button
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity + 1)
+                            }
                             className="text-emerald-600 hover:text-emerald-700 transition-colors duration-300"
                           >
                             <Plus size={16} strokeWidth={2.5} />

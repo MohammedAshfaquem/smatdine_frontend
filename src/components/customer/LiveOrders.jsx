@@ -68,19 +68,19 @@ export default function LiveOrders({ tableId }) {
     return matchesSearch && matchesStatus;
   });
 
-  if (orders.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center text-gray-500">
-        <div className="w-72 h-72 mb-4">
-          <Lottie animationData={SearchingAnimation} loop={true} />
-        </div>
-        <h2 className="text-2xl font-bold text-emerald-600 mb-2">
-          🕒 Live Order Tracking
-        </h2>
-        <p className="text-gray-600">No active orders for this table.</p>
-      </div>
-    );
-  }
+  // if (orders.length === 0) {
+  //   return (
+  //     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center text-gray-500">
+  //       <div className="w-72 h-72 mb-4">
+  //         <Lottie animationData={SearchingAnimation} loop={true} />
+  //       </div>
+  //       <h2 className="text-2xl font-bold text-emerald-600 mb-2">
+  //         🕒 Live Order Tracking
+  //       </h2>
+  //       <p className="text-gray-600">No active orders for this table.</p>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen bg-gray-50 px-6 py-8">
@@ -160,7 +160,10 @@ export default function LiveOrders({ tableId }) {
 
         {/* Orders Grid */}
         {filteredOrders.length === 0 ? (
-          <div className="text-center py-20">
+          <div className="flex flex-col items-center justify-center py-10">
+            <div className="w-56 h-56 mb-4">
+              <Lottie animationData={SearchingAnimation} loop={true} />
+            </div>
             <p className="text-gray-500 text-lg">
               No orders match your filters
             </p>

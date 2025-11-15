@@ -15,9 +15,12 @@ export default function KitchenDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [sidebarWidth, setSidebarWidth] = useState(256); // expanded width in px
+
 
   const API_URL = "http://127.0.0.1:8000/kitchen/orders/";
-  const COMPLETED_ORDERS_URL = "http://127.0.0.1:8000/kitchen/orders/completed/"; // ✅ updated
+  const COMPLETED_ORDERS_URL =
+    "http://127.0.0.1:8000/kitchen/orders/completed/"; // ✅ updated
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -100,32 +103,37 @@ export default function KitchenDashboard() {
   const userRole = user?.role || null;
 
   return (
-    <div className="flex bg-gray-50 min-h-screen">
-      <KitchenSidebar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onLogout={logout}
-        user={user}
-      />
+  <div className="flex bg-gray-50 min-h-screen">
+  <KitchenSidebar
+    activeTab={activeTab}
+    setActiveTab={setActiveTab}
+    onLogout={logout}
+    user={user}
+    setSidebarWidth={setSidebarWidth}
+  />
 
-      <div className="flex-1 ml-72">
-        {activeTab === "dashboard" && <MainDashboard stats={stats} />}
-        {activeTab === "active-orders" && (
-          <ActiveOrders
-            orders={orders}
-            accessToken={accessToken}
-            fetchOrders={fetchOrders}
-            logout={logout}
-            userRole={userRole}
-            userId={userId}
-          />
-        )}
-        {activeTab === "inventory" && <InventoryDashboard />}
-        {activeTab === "completed" && (
-          <CompletedDashboard completedOrders={completedOrders} />
-        )}
-        {activeTab === "settings" && <SettingsDashboard />}
-      </div>
-    </div>
+  <div
+    className="flex-1 transition-all duration-300"
+    style={{ marginLeft: sidebarWidth }}
+  >
+    {activeTab === "dashboard" && <MainDashboard stats={stats} />}
+    {activeTab === "active-orders" && (
+      <ActiveOrders
+        orders={orders}
+        accessToken={accessToken}
+        fetchOrders={fetchOrders}
+        logout={logout}
+        userRole={userRole}
+        userId={userId}
+      />
+    )}
+    {activeTab === "inventory" && <InventoryDashboard />}
+    {activeTab === "completed" && (
+      <CompletedDashboard completedOrders={completedOrders} />
+    )}
+    {activeTab === "settings" && <SettingsDashboard />}
+  </div>
+</div>
+
   );
 }

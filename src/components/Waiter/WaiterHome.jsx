@@ -55,41 +55,45 @@ export default function WaiterHome() {
     fetchMenu();
   }, []);
 
-  const handleAddToCart = async (item, quantity, instructions, tableId = null) => {
-    const tableNum = tableId
-      ? Number(tableId)
-      : selectedTable?.table_number;
+const handleAddToCart = async (item, quantity, instructions, tableId = null) => {
+  const tableNum = tableId
+    ? Number(tableId)
+    : selectedTable?.table_number;
 
-    if (!tableNum) {
-      toast.error("Please select a table first.");
-      return;
+  if (!tableNum) {
+    toast.error("Please select a table first.");
+    return { success: false };
+  }
+
+  try {
+    const res = await axios.post(`${API_URL}/cart/add/`, {
+      table_number: tableNum,
+      menu_item_id: item.id,
+      quantity,
+      special_instructions: instructions,
+      is_custom: false
+    }, { headers: getAuthHeaders() });
+
+    toast.success(`${item.name} added to Table ${tableNum}`);
+    return { success: true };
+
+  } catch (err) {
+    const msg = err.response?.data?.message || "Failed to add item";
+
+    // ⭐ DETECT STOCK LIMIT MESSAGE ⭐
+    if (msg.includes("Max quantity reached")) {
+      toast.error(msg);
+      return { success: false, maxReached: true };
     }
 
-    console.log("handleAddToCart:", { item, quantity, instructions, tableNum });
+    toast.error(msg);
+    return { success: false };
+  }
+};
 
-    try {
-      const res = await axios.post(
-        `${API_URL}/cart/add/`,
-        {
-          table_number: tableNum,
-          menu_item_id: item.id,
-          quantity,
-          special_instructions: instructions,
-          is_custom: false
-        },
-        {
-          headers: getAuthHeaders(),
-        }
-      );
-      console.log("Add to cart response:", res.data);
-      toast.success(`${item.name} added to Table ${tableNum}`);
-      setModalOpen(false);
-    } catch (err) {
-      console.error("Failed to add to cart:", err.response?.data || err.message);
-      const errorMsg = err.response?.data?.error || err.response?.data?.detail || "Failed to add item to cart.";
-      toast.error(errorMsg);
-    }
-  };
+
+
+
 
   if (loadingTables || loadingMenu) {
     return (

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Search, AlertCircle } from "lucide-react";
-import { toast } from "react-hot-toast";import api from "../../api/staff";
+import { toast } from "react-hot-toast";
+import api from "../../api/staff";
+import ConfirmationModal from "../ConfirmationModal.jsx";
 
 export default function WaiterTablesTab() {
   const [tables, setTables] = useState([]);
@@ -9,7 +11,7 @@ export default function WaiterTablesTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState(null);
-  const [actionLoading, setActionLoading] = useState(false); 
+  const [loadingTables, setLoadingTables] = useState({}); // per-table loading
 
   const fetchTables = async () => {
     try {
@@ -25,7 +27,7 @@ export default function WaiterTablesTab() {
       setTables(data);
       if (data.length > 0 && !selectedTable) setSelectedTable(data[0]);
     } catch (err) {
-      console.error("Error fetching tables:", err);
+      console.error("Error fetching tables:", err.response?.data || err.message);
       setError(err.message || "Failed to load tables");
     } finally {
       setLoading(false);
@@ -55,22 +57,30 @@ export default function WaiterTablesTab() {
   };
 
   const handleStatusChange = async (table) => {
-    setActionLoading(true);
+    setLoadingTables((prev) => ({ ...prev, [table.id]: true }));
     try {
       if (table.status === "occupied") {
+        // Optimistic UI update
+        setTables((prev) =>
+          prev.map((t) =>
+            t.id === table.id
+              ? { ...t, status: "available", customer_name: "Guest", orders: [], requests: [], progress: 0 }
+              : t
+          )
+        );
         await api.post(`waiter/tables/clear/${table.table_number}/`);
         toast.success(`Table ${table.table_number} cleared and archived.`);
       } else {
         await api.patch(`api/tables/${table.id}/`, { status: "occupied" });
         toast.success(`Table ${table.table_number} marked as occupied.`);
+        fetchTablesInBackground();
       }
       setConfirmDialog(null);
-      fetchTablesInBackground();
     } catch (err) {
       toast.error("Failed to update table status");
-      console.error(err);
+      console.error("Error updating table:", err.response?.data || err.message);
     } finally {
-      setActionLoading(false);
+      setLoadingTables((prev) => ({ ...prev, [table.id]: false }));
     }
   };
 
@@ -86,12 +96,9 @@ export default function WaiterTablesTab() {
 
       setTables((prevTables) => {
         const hasChanged =
-          JSON.stringify(prevTables.map((t) => t.id)) !==
-            JSON.stringify(data.map((t) => t.id)) ||
-          JSON.stringify(prevTables.map((t) => t.progress)) !==
-            JSON.stringify(data.map((t) => t.progress)) ||
-          JSON.stringify(prevTables.map((t) => t.bill_amount)) !==
-            JSON.stringify(data.map((t) => t.bill_amount));
+          JSON.stringify(prevTables.map((t) => t.id)) !== JSON.stringify(data.map((t) => t.id)) ||
+          JSON.stringify(prevTables.map((t) => t.progress)) !== JSON.stringify(data.map((t) => t.progress)) ||
+          JSON.stringify(prevTables.map((t) => t.bill_amount)) !== JSON.stringify(data.map((t) => t.bill_amount));
         return hasChanged ? data : prevTables;
       });
 
@@ -99,7 +106,7 @@ export default function WaiterTablesTab() {
         prev ? data.find((t) => t.id === prev.id) || prev : prev
       );
     } catch (err) {
-      console.error("Failed to fetch tables in background", err);
+      console.error("Failed to fetch tables in background", err.response?.data || err.message);
     }
   };
 
@@ -134,9 +141,7 @@ export default function WaiterTablesTab() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
         <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
-            Error Loading Tables
-          </h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Error Loading Tables</h3>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={fetchTables}
@@ -241,36 +246,33 @@ export default function WaiterTablesTab() {
 
                     <div className="text-xs text-gray-500 mb-2.5 capitalize">{table.status}</div>
 
-                    {/* ✅ Toggle Button */}
+                    {/* Toggle Button */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setConfirmDialog(table);
                       }}
-                      disabled={actionLoading}
+                      disabled={loadingTables[table.id]}
                       className={`w-full py-2 text-xs font-semibold rounded-full transition-colors ${
                         table.status === "occupied"
                           ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
                           : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      } ${actionLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                      } ${loadingTables[table.id] ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
-                      {actionLoading ? "Processing..." : table.status === "occupied" ? "Set Available" : "Set Occupied"}
+                      {loadingTables[table.id]
+                        ? "Processing..."
+                        : table.status === "occupied"
+                        ? "Set Available"
+                        : "Set Occupied"}
                     </button>
                   </div>
 
-                  {/* ✅ Progress Circle */}
+                  {/* Progress Circle */}
                   {table.status === "occupied" && (
                     <div className="ml-4 flex-shrink-0">
                       <div className="relative w-14 h-14">
                         <svg className="w-full h-full -rotate-90">
-                          <circle
-                            cx="28"
-                            cy="28"
-                            r="24"
-                            fill="none"
-                            stroke="#e5e7eb"
-                            strokeWidth="5"
-                          />
+                          <circle cx="28" cy="28" r="24" fill="none" stroke="#e5e7eb" strokeWidth="5" />
                           <circle
                             cx="28"
                             cy="28"
@@ -279,7 +281,7 @@ export default function WaiterTablesTab() {
                             stroke="#10b981"
                             strokeWidth="5"
                             strokeDasharray={`${2 * Math.PI * 24}`}
-                            strokeDashoffset={`${2 * Math.PI * 24 * (1 - (table.progress || 0) / 100)}`}
+                            strokeDashoffset={`${2 * Math.PI * 24 * (1 - Math.min(100, Math.max(0, table.progress || 0)) / 100)}`}
                             strokeLinecap="round"
                           />
                         </svg>
@@ -296,43 +298,34 @@ export default function WaiterTablesTab() {
         </div>
       </div>
 
-      {/* ✅ Confirmation Popup */}
-      {confirmDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-lg p-6 max-w-sm w-full text-center">
-            <h3 className="text-lg font-bold text-gray-900 mb-3">Confirm Status Change</h3>
-            <p className="text-gray-600 mb-5">
+      {/* Reusable Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={!!confirmDialog}
+        type="approve"
+        title="Confirm Status Change"
+        message={
+          confirmDialog ? (
+            <span>
               Are you sure you want to set <strong>Table {confirmDialog.table_number}</strong> as{" "}
-              <span className="capitalize">{confirmDialog.status === "occupied" ? "available" : "occupied"}</span>?
-            </p>
-            <div className="flex justify-center gap-4">
-              <button
-                onClick={() => setConfirmDialog(null)}
-                className="px-4 py-2 bg-gray-200 rounded-lg text-gray-700 hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleStatusChange(confirmDialog)}
-                className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
-              >
-                Yes, Update
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+              <span className="capitalize">
+                {confirmDialog.status === "occupied" ? "available" : "occupied"}
+              </span>
+              ?
+            </span>
+          ) : null
+        }
+        confirmText="Yes, Update"
+        cancelText="Cancel"
+        onConfirm={() => confirmDialog && handleStatusChange(confirmDialog)}
+        onCancel={() => setConfirmDialog(null)}
+      />
     </div>
   );
 }
 
-// ✅ Table Layout Component
+// Table Layout Component (unchanged)
 function TableLayout({ table, onSelect, selected }) {
-  const seat = (extraClass = "") => (
-    <div
-      className={`w-4 h-4 rounded ${getSeatStyle(table.status, selected)} ${extraClass}`}
-    />
-  );
+  const seat = (extraClass = "") => <div className={`w-4 h-4 rounded ${getSeatStyle(table.status, selected)} ${extraClass}`} />;
 
   const getSeatStyle = (status, selected) => {
     if (selected) return "bg-emerald-500 shadow-md";
@@ -345,8 +338,7 @@ function TableLayout({ table, onSelect, selected }) {
   };
 
   const getTableStyle = (status, selected) => {
-    if (selected)
-      return "bg-emerald-400 border-emerald-600 ring-4 ring-emerald-200 shadow-xl";
+    if (selected) return "bg-emerald-400 border-emerald-600 ring-4 ring-emerald-200 shadow-xl";
     switch (status) {
       case "occupied":
         return "bg-emerald-500 border-emerald-600 shadow-lg shadow-emerald-200";
@@ -356,31 +348,14 @@ function TableLayout({ table, onSelect, selected }) {
   };
 
   return (
-    <div
-      onClick={() => onSelect(table)}
-      className="relative cursor-pointer flex flex-col items-center justify-center group"
-    >
-      {/* Top Seats */}
+    <div onClick={() => onSelect(table)} className="relative cursor-pointer flex flex-col items-center justify-center group">
       {table.seats >= 2 && (
-        <div className="flex justify-center gap-2 mb-2">
-          {table.seats === 6 ? (
-            <>
-              {seat()} {seat()}
-            </>
-          ) : (
-            seat()
-          )}
-        </div>
+        <div className="flex justify-center gap-2 mb-2">{table.seats === 6 ? <>{seat()} {seat()}</> : seat()}</div>
       )}
 
       <div className="flex items-center justify-center">
         {(table.seats >= 4 || table.seats === 6) && seat("mr-2")}
-        <div
-          className={`w-28 h-24 rounded-2xl border-2 flex flex-col items-center justify-center transition-all group-hover:scale-105 ${getTableStyle(
-            table.status,
-            selected
-          )}`}
-        >
+        <div className={`w-28 h-24 rounded-2xl border-2 flex flex-col items-center justify-center transition-all group-hover:scale-105 ${getTableStyle(table.status, selected)}`}>
           <span className="text-white font-bold text-xl mb-1">{table.table_number}</span>
           {table.status === "occupied" && table.customer_name && (
             <span className="text-white text-xs opacity-90 font-medium px-2 text-center truncate max-w-full">
@@ -392,15 +367,7 @@ function TableLayout({ table, onSelect, selected }) {
       </div>
 
       {table.seats >= 2 && (
-        <div className="flex justify-center gap-2 mt-2">
-          {table.seats === 6 ? (
-            <>
-              {seat()} {seat()}
-            </>
-          ) : (
-            seat()
-          )}
-        </div>
+        <div className="flex justify-center gap-2 mt-2">{table.seats === 6 ? <>{seat()} {seat()}</> : seat()}</div>
       )}
     </div>
   );
