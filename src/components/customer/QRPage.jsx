@@ -7,12 +7,13 @@ const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 export default function QRPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const tableNumber = searchParams.get("table") || 2;
+  const tableNumber = searchParams.get("table") || 1;
 
   const [loading, setLoading] = useState(false);
   const [imgError, setImgError] = useState(false);
 
   const qrUrl = `${API_URL}/media/qrcodes/table_${tableNumber}_qr.png`;
+  
 
   const handleScan = async () => {
     setLoading(true);
